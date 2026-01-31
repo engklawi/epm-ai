@@ -32,7 +32,7 @@ export default function RiskManagement() {
   return (
     <div>
       <div className="page-header">
-        <h1>⚠️ UC6: Risk Management</h1>
+        <h1>Risk Management</h1>
         <p>Predictive risk identification with AI-powered mitigation recommendations</p>
       </div>
 
@@ -57,7 +57,7 @@ export default function RiskManagement() {
 
       <div className="grid-2 gap-20">
         <div className="card">
-          <h3>📊 Risks by Category</h3>
+          <h3>Risks by Category</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -78,7 +78,7 @@ export default function RiskManagement() {
         </div>
 
         <div className="card">
-          <h3>🚨 Critical Risks - Immediate Attention</h3>
+          <h3>Critical Risks - Immediate Attention</h3>
           {riskData.risks.filter(r => r.status === 'Critical').map(risk => (
             <div key={risk.id} className="alert critical">
               <AlertTriangle size={20} />
@@ -95,7 +95,7 @@ export default function RiskManagement() {
       </div>
 
       <div className="card mt-20">
-        <h3>📋 Risk Register</h3>
+        <h3>Risk Register</h3>
         <table>
           <thead>
             <tr>
@@ -146,7 +146,7 @@ export default function RiskManagement() {
       </div>
 
       <div className="card mt-20">
-        <h3>🤖 AI-Recommended Mitigations</h3>
+        <h3>AI-Recommended Mitigations</h3>
         {riskData.risks.filter(r => r.status === 'Critical' || r.status === 'Open').slice(0, 4).map(risk => (
           <div key={risk.id} style={{ padding: 15, background: '#f8fafc', borderRadius: 8, marginBottom: 10 }}>
             <div className="flex flex-between flex-center">

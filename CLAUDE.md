@@ -1,16 +1,9 @@
-# EPM-AI Project - Claude Code Instructions
+# EPM-AI Project
 
-## Project Structure
-```
-EPM-AI/
-├── backend/          # Node.js Express API
-│   ├── server.js     # Main API server
-│   ├── data/         # Mock JSON data
-│   └── app.yaml      # GCP App Engine config
-├── frontend/         # React + Vite
-│   ├── src/pages/    # 10 Use Case pages
-│   └── app.yaml      # GCP App Engine config
-```
+## Live URLs
+- **Frontend:** https://frontend-dot-epm-ai-demo-20260201.uc.r.appspot.com
+- **Backend:** https://epm-ai-demo-20260201.uc.r.appspot.com
+- **GitHub:** https://github.com/engklawi/epm-ai
 
 ## Local Development
 ```bash
@@ -21,16 +14,10 @@ cd backend && npm run dev
 cd frontend && npm run dev
 ```
 
-## Deploy to Google Cloud
+## Deploy to Google Cloud (App Engine)
 
-### Prerequisites
 ```bash
 export PATH="$HOME/google-cloud-sdk/bin:$PATH"
-gcloud auth login  # if not already logged in
-```
-
-### Deploy Commands
-```bash
 PROJECT_ID="epm-ai-demo-20260201"
 
 # 1. Update frontend API URLs to production
@@ -51,16 +38,19 @@ cd ../frontend
 gcloud app deploy --project=$PROJECT_ID --quiet
 ```
 
-### Live URLs
-- **Frontend:** https://frontend-dot-epm-ai-demo-20260201.uc.r.appspot.com
-- **Backend:** https://epm-ai-demo-20260201.uc.r.appspot.com
-- **GitHub:** https://github.com/engklawi/epm-ai
+## Project Structure
+```
+EPM-AI/
+├── backend/          # Node.js Express API
+│   ├── server.js     # Main server with OpenAI integration
+│   ├── data/         # Mock JSON data
+│   └── app.yaml      # GCP App Engine config
+├── frontend/         # React + Vite
+│   ├── src/pages/    # 10 Use Case pages
+│   └── app.yaml      # GCP App Engine config
+```
 
-## Environment Variables
-Backend needs:
-- `OPENAI_API_KEY` - For AI chat and document generation
-
-## Use Cases (10 total)
+## 10 Use Cases
 1. PM Assistant - AI Chat
 2. Portfolio Dashboard
 3. Strategy & ROI
@@ -71,3 +61,6 @@ Backend needs:
 8. Executive Predictions
 9. PM Scoring
 10. PM Development
+
+## Environment Variables
+- `OPENAI_API_KEY` - Required for AI chat and document generation

@@ -13,16 +13,16 @@ import PMDevelopment from './pages/PMDevelopment';
 import './App.css';
 
 const navItems = [
-  { path: '/', icon: MessageSquare, label: 'UC1: PM Assistant', desc: 'AI Chat & Insights' },
-  { path: '/dashboard', icon: LayoutDashboard, label: 'UC2: Portfolio', desc: 'Directors Dashboard' },
-  { path: '/strategy', icon: Target, label: 'UC3: Strategy & ROI', desc: 'Objectives & Returns' },
-  { path: '/pmo', icon: Activity, label: 'UC4: PMO Performance', desc: 'Process Metrics' },
-  { path: '/alignment', icon: Compass, label: 'UC5: Alignment', desc: 'Strategic Scoring' },
-  { path: '/risks', icon: AlertTriangle, label: 'UC6: Risk Center', desc: 'Predictive Analytics' },
-  { path: '/docs', icon: FileText, label: 'UC7: Documents', desc: 'Auto-Generation' },
-  { path: '/predictions', icon: LineChart, label: 'UC8: Predictions', desc: 'Executive Forecasts' },
-  { path: '/pm-scores', icon: Users, label: 'UC9: PM Scoring', desc: 'Performance Metrics' },
-  { path: '/pm-dev', icon: GraduationCap, label: 'UC10: PM Development', desc: 'Training & Growth' },
+  { path: '/', icon: MessageSquare, label: 'AI Assistant', desc: 'Chat & Insights' },
+  { path: '/dashboard', icon: LayoutDashboard, label: 'Portfolio', desc: 'Programs Overview' },
+  { path: '/strategy', icon: Target, label: 'Strategy & ROI', desc: 'Business Alignment' },
+  { path: '/pmo', icon: Activity, label: 'PMO Performance', desc: 'Process Metrics' },
+  { path: '/alignment', icon: Compass, label: 'Alignment', desc: 'Strategic Scoring' },
+  { path: '/risks', icon: AlertTriangle, label: 'Risk Center', desc: 'Predictive Analysis' },
+  { path: '/docs', icon: FileText, label: 'Documents', desc: 'Auto-Generation' },
+  { path: '/predictions', icon: LineChart, label: 'Predictions', desc: 'Executive Forecasts' },
+  { path: '/pm-scores', icon: Users, label: 'PM Scoring', desc: 'Performance Metrics' },
+  { path: '/pm-dev', icon: GraduationCap, label: 'Development', desc: 'Training & Growth' },
 ];
 
 function App() {
@@ -31,8 +31,8 @@ function App() {
       <div className="app">
         <nav className="sidebar">
           <div className="logo">
-            <h2>EPM AI</h2>
-            <span>Microsoft EPM + Intelligence</span>
+            <h2>EPM Intelligence</h2>
+            <span>Microsoft Project + AI</span>
           </div>
           <div style={{ flex: 1, overflow: 'auto', paddingBottom: 80 }}>
             <ul>
@@ -49,25 +49,25 @@ function App() {
               ))}
             </ul>
           </div>
-          <div style={{ 
+          <div style={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            padding: '16px 20px',
-            background: 'linear-gradient(180deg, transparent 0%, #0f172a 20%)',
+            padding: '16px',
+            background: 'linear-gradient(180deg, transparent 0%, var(--slate-900) 30%)',
           }}>
-            <div style={{ 
+            <div style={{
               padding: '12px 14px',
-              background: 'rgba(255,255,255,0.03)',
+              background: 'rgba(255,255,255,0.04)',
               borderRadius: 8,
               border: '1px solid rgba(255,255,255,0.06)'
             }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>
-                PROOF OF CONCEPT
+              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 2, letterSpacing: '0.05em' }}>
+                DEMO VERSION
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
-                v1.0 • All 10 Use Cases
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>
+                v1.0 · Enterprise POC
               </div>
             </div>
           </div>

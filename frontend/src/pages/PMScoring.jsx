@@ -45,7 +45,7 @@ export default function PMScoring() {
   return (
     <div>
       <div className="page-header">
-        <h1>👥 UC9: PM Performance Scoring</h1>
+        <h1>PM Performance Scoring</h1>
         <p>AI-driven evaluation using balanced scorecard approach and multi-dimensional KPIs</p>
       </div>
 
@@ -72,7 +72,7 @@ export default function PMScoring() {
 
       <div className="grid-2 gap-20">
         <div className="card">
-          <h3>🏆 PM Leaderboard</h3>
+          <h3>PM Leaderboard</h3>
           <table>
             <thead>
               <tr>
@@ -135,7 +135,7 @@ export default function PMScoring() {
         <div>
           {selectedPM && (
             <div className="card">
-              <h3>📊 {selectedPM.name} - Detailed Scores</h3>
+              <h3>{selectedPM.name} - Detailed Scores</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <RadarChart data={radarData}>
                   <PolarGrid />
@@ -166,7 +166,7 @@ export default function PMScoring() {
 
       <div className="grid-2 gap-20 mt-20">
         <div className="card">
-          <h3>📈 Score Comparison</h3>
+          <h3>Score Comparison</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={comparisonData}>
               <XAxis dataKey="name" />
@@ -178,7 +178,7 @@ export default function PMScoring() {
         </div>
 
         <div className="card">
-          <h3>⚠️ Needs Support</h3>
+          <h3>Needs Support</h3>
           {data.needsSupport.length > 0 ? (
             data.needsSupport.map(pm => (
               <div key={pm.id} className="alert warning">

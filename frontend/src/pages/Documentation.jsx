@@ -31,22 +31,22 @@ export default function Documentation() {
   };
 
   const docTypes = [
-    { id: 'status-report', label: 'Status Report', icon: '📊' },
-    { id: 'charter', label: 'Project Charter', icon: '📜' },
-    { id: 'meeting-summary', label: 'Meeting Summary', icon: '📝' },
+    { id: 'status-report', label: 'Status Report' },
+    { id: 'charter', label: 'Project Charter' },
+    { id: 'meeting-summary', label: 'Meeting Summary' },
   ];
 
   return (
     <div>
       <div className="page-header">
-        <h1>📄 UC7: AI Documentation</h1>
+        <h1>AI Documentation</h1>
         <p>Automatically generate project documents using AI templates and real-time data</p>
       </div>
 
       <div className="grid-2 gap-20">
         <div>
           <div className="card">
-            <h3>📝 Generate Document</h3>
+            <h3>Generate Document</h3>
             
             <div style={{ marginBottom: 20 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Select Project</label>
@@ -71,7 +71,7 @@ export default function Documentation() {
                     onClick={() => setDocType(dt.id)}
                     style={{ flex: 1 }}
                   >
-                    {dt.icon} {dt.label}
+                    {dt.label}
                   </button>
                 ))}
               </div>
@@ -92,7 +92,7 @@ export default function Documentation() {
           </div>
 
           <div className="card">
-            <h3>🤖 AI Capabilities</h3>
+            <h3>AI Capabilities</h3>
             <ul style={{ lineHeight: 2, paddingLeft: 20 }}>
               <li>✅ Auto-generate project charters from EPM data</li>
               <li>✅ Create status reports with real-time metrics</li>
@@ -105,7 +105,7 @@ export default function Documentation() {
 
         <div className="card">
           <div className="flex flex-between flex-center mb-20">
-            <h3>📑 Document Preview</h3>
+            <h3>Document Preview</h3>
             {document && (
               <button className="secondary" onClick={() => alert('Download functionality would save this document')}>
                 <Download size={16} /> Export
@@ -136,7 +136,7 @@ export default function Documentation() {
       </div>
 
       <div className="card mt-20">
-        <h3>📚 Recent Documents</h3>
+        <h3>Recent Documents</h3>
         <table>
           <thead>
             <tr>

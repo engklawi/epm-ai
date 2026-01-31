@@ -71,7 +71,7 @@ export default function PMOPerformance() {
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>📈 Performance Trends</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>Performance Trends</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={trendData}>
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
@@ -85,7 +85,7 @@ export default function PMOPerformance() {
         </div>
 
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>🏆 Industry Benchmarking</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>Industry Benchmarking</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={benchmarkData} layout="vertical">
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
@@ -100,7 +100,7 @@ export default function PMOPerformance() {
 
       {/* AI Recommendations */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>🤖 AI Process Recommendations</h3>
+        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>AI Process Recommendations</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {[
             { title: 'Schedule Adherence Gap', desc: 'Consider adopting Agile methodology for 3 waterfall projects showing consistent delays', priority: 'high' },

@@ -101,7 +101,7 @@ export default function ExecutivePredictions() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
         {/* Budget Forecast */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>💰 Budget Forecast (Millions)</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>Budget Forecast (Millions)</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={forecastData}>
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
@@ -115,7 +115,7 @@ export default function ExecutivePredictions() {
 
         {/* Scenario Analysis */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>🎯 Scenario Analysis</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>Scenario Analysis</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
@@ -147,7 +147,7 @@ export default function ExecutivePredictions() {
 
       {/* Executive Recommendations */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>🤖 AI Strategic Recommendations</h3>
+        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>AI Strategic Recommendations</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {[
             { title: 'Immediate Action Required', items: ['Freeze scope on Customer Portal', 'Reallocate 2 developers from Cloud Migration'], urgent: true },

@@ -25,7 +25,7 @@ export default function StrategyROI() {
   return (
     <div>
       <div className="page-header">
-        <h1>🎯 UC3: Strategy & ROI</h1>
+        <h1>Strategy & ROI</h1>
         <p>Map projects to strategic objectives and measure ROI contribution</p>
       </div>
 
@@ -46,7 +46,7 @@ export default function StrategyROI() {
 
       <div className="grid-2 gap-20">
         <div className="card">
-          <h3>📈 ROI by Project</h3>
+          <h3>ROI by Project</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={roiData}>
               <XAxis dataKey="name" />
@@ -59,7 +59,7 @@ export default function StrategyROI() {
         </div>
 
         <div className="card">
-          <h3>🎯 Alignment by Objective</h3>
+          <h3>Alignment by Objective</h3>
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={alignmentData}>
               <PolarGrid />
@@ -72,7 +72,7 @@ export default function StrategyROI() {
       </div>
 
       <div className="card mt-20">
-        <h3>🏢 Strategic Objectives Breakdown</h3>
+        <h3>Strategic Objectives Breakdown</h3>
         {strategy.objectives.map(obj => (
           <div key={obj.id} style={{ marginBottom: 30, padding: 20, background: '#f8fafc', borderRadius: 8 }}>
             <div className="flex flex-between flex-center mb-20">

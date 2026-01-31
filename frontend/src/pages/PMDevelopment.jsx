@@ -62,7 +62,7 @@ export default function PMDevelopment() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
         {/* Leaderboard */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>🏆 PM Rankings & Career Path</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>PM Rankings & Career Path</h3>
           {pmData.projectManagers.map((pm, i) => (
             <div key={pm.id} style={{ 
               display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', 
@@ -118,7 +118,7 @@ export default function PMDevelopment() {
 
       {/* Training Recommendations */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 24 }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>📚 AI Training Recommendations</h3>
+        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>AI Training Recommendations</h3>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc' }}>
@@ -149,7 +149,7 @@ export default function PMDevelopment() {
 
       {/* Mentorship Pairings */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>🤝 AI-Suggested Mentorship Pairings</h3>
+        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>AI-Suggested Mentorship Pairings</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {[
             { mentor: 'Sarah Ahmed', mentee: 'Fatima Hassan', focus: 'Risk Management & Stakeholder Communication', reason: 'Complementary skill profiles, similar project domains' },

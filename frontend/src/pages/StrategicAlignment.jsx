@@ -54,7 +54,7 @@ export default function StrategicAlignment() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
         {/* Alignment Scores */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>📊 Alignment Scores by Project</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>Alignment Scores by Project</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={alignmentData} layout="vertical">
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -69,7 +69,7 @@ export default function StrategicAlignment() {
 
         {/* Reprioritization Engine */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>⚡ Smart Reprioritization</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 20, color: 'var(--slate-800)' }}>Smart Reprioritization</h3>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 12 }}>AI-RECOMMENDED ACTIONS</div>
             {[
