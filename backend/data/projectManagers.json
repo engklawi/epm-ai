@@ -1,0 +1,78 @@
+[
+  {
+    "id": "PM001",
+    "name": "Sarah Ahmed",
+    "email": "sarah.ahmed@company.com",
+    "activeProjects": 2,
+    "completedProjects": 8,
+    "scores": {
+      "delivery": 92,
+      "budget": 88,
+      "riskResolution": 85,
+      "stakeholderSatisfaction": 94,
+      "documentation": 90
+    },
+    "overallScore": 90,
+    "trend": "up",
+    "workload": 85,
+    "certifications": ["PMP", "Agile"],
+    "yearsExperience": 7
+  },
+  {
+    "id": "PM002",
+    "name": "Mohammed Ali",
+    "email": "mohammed.ali@company.com",
+    "activeProjects": 1,
+    "completedProjects": 12,
+    "scores": {
+      "delivery": 95,
+      "budget": 92,
+      "riskResolution": 88,
+      "stakeholderSatisfaction": 90,
+      "documentation": 85
+    },
+    "overallScore": 90,
+    "trend": "stable",
+    "workload": 60,
+    "certifications": ["PMP", "PRINCE2", "Agile"],
+    "yearsExperience": 10
+  },
+  {
+    "id": "PM003",
+    "name": "Fatima Hassan",
+    "email": "fatima.hassan@company.com",
+    "activeProjects": 1,
+    "completedProjects": 4,
+    "scores": {
+      "delivery": 72,
+      "budget": 65,
+      "riskResolution": 70,
+      "stakeholderSatisfaction": 78,
+      "documentation": 82
+    },
+    "overallScore": 73,
+    "trend": "down",
+    "workload": 95,
+    "certifications": ["PMP"],
+    "yearsExperience": 3
+  },
+  {
+    "id": "PM004",
+    "name": "Ahmed Khalil",
+    "email": "ahmed.khalil@company.com",
+    "activeProjects": 1,
+    "completedProjects": 6,
+    "scores": {
+      "delivery": 85,
+      "budget": 80,
+      "riskResolution": 82,
+      "stakeholderSatisfaction": 88,
+      "documentation": 78
+    },
+    "overallScore": 83,
+    "trend": "up",
+    "workload": 70,
+    "certifications": ["PMP", "Agile"],
+    "yearsExperience": 5
+  }
+]

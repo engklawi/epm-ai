@@ -1,0 +1,62 @@
+[
+  {
+    "id": "SO001",
+    "name": "Digital Transformation",
+    "description": "Modernize core systems and processes",
+    "weight": 30,
+    "targetROI": 150,
+    "projects": ["P001"],
+    "totalBudget": 2500000,
+    "totalSpent": 1800000,
+    "overallProgress": 65,
+    "kpis": [
+      { "name": "System Uptime", "target": 99.9, "actual": 99.5 },
+      { "name": "Process Automation", "target": 80, "actual": 65 }
+    ]
+  },
+  {
+    "id": "SO002",
+    "name": "Cost Optimization",
+    "description": "Reduce operational costs through efficiency",
+    "weight": 25,
+    "targetROI": 200,
+    "projects": ["P002"],
+    "totalBudget": 1800000,
+    "totalSpent": 1200000,
+    "overallProgress": 80,
+    "kpis": [
+      { "name": "Infrastructure Cost", "target": -30, "actual": -25 },
+      { "name": "Operational Efficiency", "target": 40, "actual": 35 }
+    ]
+  },
+  {
+    "id": "SO003",
+    "name": "Customer Experience",
+    "description": "Enhance customer touchpoints and satisfaction",
+    "weight": 30,
+    "targetROI": 175,
+    "projects": ["P003", "P005"],
+    "totalBudget": 1500000,
+    "totalSpent": 1230000,
+    "overallProgress": 55,
+    "kpis": [
+      { "name": "NPS Score", "target": 70, "actual": 58 },
+      { "name": "Customer Retention", "target": 95, "actual": 91 }
+    ]
+  },
+  {
+    "id": "SO004",
+    "name": "Data-Driven Decisions",
+    "description": "Enable analytics-based decision making",
+    "weight": 15,
+    "targetROI": 300,
+    "projects": ["P004"],
+    "totalBudget": 1200000,
+    "totalSpent": 600000,
+    "overallProgress": 55,
+    "kpis": [
+      { "name": "Data Accessibility", "target": 90, "actual": 70 },
+      { "name": "Report Automation", "target": 80, "actual": 45 }
+    ]
+  }
+]
