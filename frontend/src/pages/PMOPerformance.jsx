@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { TrendingUp, CheckCircle, Clock, DollarSign } from 'lucide-react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function PMOPerformance() {
   const [portfolio, setPortfolio] = useState(null);

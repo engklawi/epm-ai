@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Users, Calendar } from 'lucide-react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function ExecutivePredictions() {
   const [risks, setRisks] = useState(null);

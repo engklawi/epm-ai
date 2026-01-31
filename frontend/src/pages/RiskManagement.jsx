@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function RiskManagement() {
   const [riskData, setRiskData] = useState(null);

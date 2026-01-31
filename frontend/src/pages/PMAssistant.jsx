@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, AlertCircle, AlertTriangle, Bot, Sparkles } from 'lucide-react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function PMAssistant() {
   const [messages, setMessages] = useState([

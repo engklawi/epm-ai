@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, FolderKanban, Target, AlertTriangle } from 'lucide-react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function DirectorsDashboard() {
   const [portfolio, setPortfolio] = useState(null);

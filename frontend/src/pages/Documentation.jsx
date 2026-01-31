@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, RefreshCw } from 'lucide-react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function Documentation() {
   const [projects, setProjects] = useState([]);
