@@ -1,190 +1,262 @@
 import { useState, useEffect } from 'react';
-import { FileText, Download, RefreshCw } from 'lucide-react';
+import { FileText, Download, Sparkles, CheckCircle, Clock, RefreshCw, FileCode, FilePlus } from 'lucide-react';
 
 const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function Documentation() {
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState('P001');
-  const [docType, setDocType] = useState('status-report');
+  const [selectedProject, setSelectedProject] = useState('');
+  const [selectedType, setSelectedType] = useState('status-report');
   const [document, setDocument] = useState(null);
-  const [generating, setGenerating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [recentDocs, setRecentDocs] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/projects`).then(r => r.json()).then(setProjects);
+    fetch(`${API}/projects`).then(r => r.json()).then(data => {
+      setProjects(data);
+      if (data.length > 0) setSelectedProject(data[0].id);
+    });
   }, []);
 
+  const documentTypes = [
+    { id: 'status-report', name: 'Status Report', icon: FileText, desc: 'Weekly/monthly project status update', color: '#6366f1' },
+    { id: 'charter', name: 'Project Charter', icon: FilePlus, desc: 'Project initiation document', color: '#10b981' },
+    { id: 'meeting-summary', name: 'Meeting Summary', icon: FileCode, desc: 'Meeting minutes with action items', color: '#f59e0b' },
+  ];
+
   const generateDocument = async () => {
-    setGenerating(true);
+    if (!selectedProject) return;
+    setLoading(true);
+    setDocument(null);
+    
     try {
       const res = await fetch(`${API}/documents/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: docType, projectId: selectedProject })
+        body: JSON.stringify({ type: selectedType, projectId: selectedProject })
       });
       const data = await res.json();
       setDocument(data);
+      
+      const project = projects.find(p => p.id === selectedProject);
+      setRecentDocs(prev => [{
+        title: data.title,
+        type: selectedType,
+        project: project?.name,
+        time: new Date().toLocaleTimeString(),
+        sections: data.sections?.length || 0
+      }, ...prev.slice(0, 4)]);
     } catch (err) {
-      console.error(err);
+      setDocument({ error: 'Failed to generate document. Please try again.' });
     }
-    setGenerating(false);
+    setLoading(false);
   };
 
-  const docTypes = [
-    { id: 'status-report', label: 'Status Report' },
-    { id: 'charter', label: 'Project Charter' },
-    { id: 'meeting-summary', label: 'Meeting Summary' },
-  ];
+  const selectedProjectData = projects.find(p => p.id === selectedProject);
 
   return (
     <div>
       <div className="page-header">
-        <h1>AI Documentation</h1>
-        <p>Automatically generate project documents using AI templates and real-time data</p>
+        <h1>AI Document Generation</h1>
+        <p>Generate professional project documents instantly using GPT-5.2</p>
       </div>
 
-      <div className="grid-2 gap-20">
-        <div>
-          <div className="card">
-            <h3>Generate Document</h3>
-            
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Select Project</label>
-              <select 
-                value={selectedProject} 
-                onChange={e => setSelectedProject(e.target.value)}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: '1rem' }}
-              >
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: 24 }}>
+        {/* Left Panel - Controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Document Type Selection */}
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 16, color: '#1e293b' }}>Document Type</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {documentTypes.map(type => (
+                <div
+                  key={type.id}
+                  onClick={() => setSelectedType(type.id)}
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    border: `2px solid ${selectedType === type.id ? type.color : '#e2e8f0'}`,
+                    background: selectedType === type.id ? `${type.color}08` : 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ 
+                      width: 36, height: 36, borderRadius: 10, 
+                      background: `${type.color}15`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <type.icon size={18} color={type.color} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{type.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{type.desc}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Document Type</label>
-              <div className="flex gap-10">
-                {docTypes.map(dt => (
-                  <button
-                    key={dt.id}
-                    className={docType === dt.id ? 'primary' : 'secondary'}
-                    onClick={() => setDocType(dt.id)}
-                    style={{ flex: 1 }}
-                  >
-                    {dt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button 
-              className="primary" 
-              onClick={generateDocument} 
-              disabled={generating}
-              style={{ width: '100%', padding: 15 }}
+          {/* Project Selection */}
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 16, color: '#1e293b' }}>Select Project</h3>
+            <select
+              value={selectedProject}
+              onChange={e => setSelectedProject(e.target.value)}
+              style={{
+                width: '100%', padding: '14px 16px', borderRadius: 10,
+                border: '1px solid #e2e8f0', fontSize: '0.9rem',
+                background: 'white', cursor: 'pointer'
+              }}
             >
-              {generating ? (
-                <><RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} /> Generating...</>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+
+            {selectedProjectData && (
+              <div style={{ marginTop: 16, padding: 14, background: '#f8fafc', borderRadius: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase' }}>PM</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{selectedProjectData.pmName}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase' }}>Status</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{selectedProjectData.status}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase' }}>Progress</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{selectedProjectData.progress}%</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase' }}>Health</div>
+                    <span style={{ 
+                      padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600,
+                      background: selectedProjectData.health === 'green' ? '#dcfce7' : selectedProjectData.health === 'yellow' ? '#fef3c7' : '#fee2e2',
+                      color: selectedProjectData.health === 'green' ? '#166534' : selectedProjectData.health === 'yellow' ? '#92400e' : '#991b1b'
+                    }}>{selectedProjectData.health.toUpperCase()}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={generateDocument}
+              disabled={loading || !selectedProject}
+              style={{
+                width: '100%', marginTop: 16, padding: '14px 20px',
+                background: loading ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                color: 'white', border: 'none', borderRadius: 12,
+                fontSize: '0.9rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+              }}
+            >
+              {loading ? (
+                <>
+                  <RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  Generating with AI...
+                </>
               ) : (
-                <><FileText size={18} /> Generate Document</>
+                <>
+                  <Sparkles size={18} />
+                  Generate Document
+                </>
               )}
             </button>
           </div>
 
-          <div className="card">
-            <h3>AI Capabilities</h3>
-            <ul style={{ lineHeight: 2.2, paddingLeft: 0, listStyle: 'none' }}>
-              {[
-                'Auto-generate project charters from EPM data',
-                'Create status reports with real-time metrics',
-                'Summarize meeting discussions into structured minutes',
-                'Extract lessons learned from past documentation',
-                'Dynamic templates auto-fill with live data'
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{
-                    width: 20, height: 20, borderRadius: '50%',
-                    background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00a36c' }}></span>
-                  </span>
-                  {item}
-                </li>
+          {/* Recent Documents */}
+          {recentDocs.length > 0 && (
+            <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 16, color: '#1e293b' }}>Recently Generated</h3>
+              {recentDocs.map((doc, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < recentDocs.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                  <CheckCircle size={16} color="#10b981" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 500 }}>{doc.title}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{doc.time}</div>
+                  </div>
+                </div>
               ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex flex-between flex-center mb-20">
-            <h3>Document Preview</h3>
-            {document && (
-              <button className="secondary" onClick={() => alert('Download functionality would save this document')}>
-                <Download size={16} /> Export
-              </button>
-            )}
-          </div>
-
-          {document ? (
-            <div className="document-preview">
-              <h2>{document.title}</h2>
-              <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: 20 }}>
-                Generated: {new Date(document.generatedAt).toLocaleString()}
-              </p>
-              {document.sections.map((section, i) => (
-                <section key={i}>
-                  <h4>{section.heading}</h4>
-                  <p>{section.content}</p>
-                </section>
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
-              <FileText size={48} style={{ opacity: 0.3, marginBottom: 10 }} />
-              <p>Select a project and document type, then click Generate</p>
             </div>
           )}
         </div>
+
+        {/* Right Panel - Document Preview */}
+        <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <FileText size={20} color="#6366f1" />
+              <span style={{ fontWeight: 600 }}>Document Preview</span>
+            </div>
+            {document && !document.error && (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <span style={{ padding: '4px 12px', background: '#dcfce7', color: '#166534', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Sparkles size={12} /> AI Generated
+                </span>
+                <button style={{ padding: '6px 14px', background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Download size={14} /> Export
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: 32, minHeight: 500 }}>
+            {!document && !loading && (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '80px 40px' }}>
+                <FileText size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
+                <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 8 }}>No document generated yet</div>
+                <div style={{ fontSize: '0.85rem' }}>Select a document type and project, then click Generate</div>
+              </div>
+            )}
+
+            {loading && (
+              <div style={{ textAlign: 'center', color: '#6366f1', padding: '80px 40px' }}>
+                <RefreshCw size={48} style={{ marginBottom: 16, animation: 'spin 1s linear infinite' }} />
+                <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 8 }}>Generating with GPT-5.2...</div>
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>AI is analyzing project data and creating your document</div>
+              </div>
+            )}
+
+            {document && document.error && (
+              <div style={{ textAlign: 'center', color: '#ef4444', padding: '80px 40px' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 500 }}>{document.error}</div>
+              </div>
+            )}
+
+            {document && !document.error && (
+              <div>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 8, color: '#1e293b' }}>{document.title}</h1>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Clock size={14} /> Generated: {new Date(document.generatedAt).toLocaleString()}
+                  </span>
+                  <span>{document.sections?.length || 0} sections</span>
+                </div>
+
+                <div style={{ borderTop: '2px solid #6366f1', paddingTop: 24 }}>
+                  {document.sections?.map((section, i) => (
+                    <div key={i} style={{ marginBottom: 24 }}>
+                      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #e2e8f0' }}>
+                        {section.heading}
+                      </h2>
+                      <div style={{ fontSize: '0.9rem', color: '#475569', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+                        {section.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="card mt-20">
-        <h3>Recent Documents</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Document</th>
-              <th>Project</th>
-              <th>Type</th>
-              <th>Generated</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Status Report - ERP Modernization</td>
-              <td>ERP Modernization</td>
-              <td><span className="badge badge-blue">Status Report</span></td>
-              <td>Today, 2:30 PM</td>
-              <td><button className="secondary" style={{ padding: '5px 10px' }}>View</button></td>
-            </tr>
-            <tr>
-              <td>Project Charter - Cloud Migration</td>
-              <td>Cloud Migration</td>
-              <td><span className="badge badge-green">Charter</span></td>
-              <td>Yesterday, 10:15 AM</td>
-              <td><button className="secondary" style={{ padding: '5px 10px' }}>View</button></td>
-            </tr>
-            <tr>
-              <td>Weekly Meeting Summary</td>
-              <td>Customer Portal</td>
-              <td><span className="badge badge-yellow">Meeting</span></td>
-              <td>Jan 28, 4:00 PM</td>
-              <td><button className="secondary" style={{ padding: '5px 10px' }}>View</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
