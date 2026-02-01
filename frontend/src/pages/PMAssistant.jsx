@@ -37,7 +37,7 @@ export default function PMAssistant() {
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'ai', content: data.response }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'ai', content: '❌ Connection error.' }]);
+      setMessages(prev => [...prev, { role: 'ai', content: 'Connection error. Please try again.' }]);
     }
     setLoading(false);
   };
@@ -139,8 +139,8 @@ export default function PMAssistant() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Alerts */}
           <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 16 }}>
-              🔔 Active Alerts
+            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <AlertTriangle size={14} /> Active Alerts
             </h3>
             {alerts.slice(0, 4).map((alert, i) => (
               <div key={i} style={{
@@ -157,8 +157,8 @@ export default function PMAssistant() {
 
           {/* Portfolio */}
           <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 16 }}>
-              📊 Portfolio Summary
+            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 14, height: 14, background: 'linear-gradient(135deg, #0078d4, #005a9e)', borderRadius: 3 }}></span> Portfolio Summary
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
               {[

@@ -93,12 +93,25 @@ export default function Documentation() {
 
           <div className="card">
             <h3>AI Capabilities</h3>
-            <ul style={{ lineHeight: 2, paddingLeft: 20 }}>
-              <li>✅ Auto-generate project charters from EPM data</li>
-              <li>✅ Create status reports with real-time metrics</li>
-              <li>✅ Summarize meeting discussions into structured minutes</li>
-              <li>✅ Extract lessons learned from past documentation</li>
-              <li>✅ Dynamic templates auto-fill with live data</li>
+            <ul style={{ lineHeight: 2.2, paddingLeft: 0, listStyle: 'none' }}>
+              {[
+                'Auto-generate project charters from EPM data',
+                'Create status reports with real-time metrics',
+                'Summarize meeting discussions into structured minutes',
+                'Extract lessons learned from past documentation',
+                'Dynamic templates auto-fill with live data'
+              ].map((item, i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <span style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00a36c' }}></span>
+                  </span>
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
