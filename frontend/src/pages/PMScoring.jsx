@@ -1,212 +1,210 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Minus, Award, AlertCircle } from 'lucide-react';
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, LineChart, Line } from 'recharts';
+import { Award, TrendingUp, TrendingDown, Users, Star, Target, Brain, Activity } from 'lucide-react';
 
 const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
 
 export default function PMScoring() {
-  const [data, setData] = useState(null);
+  const [pmData, setPmData] = useState(null);
   const [selectedPM, setSelectedPM] = useState(null);
+  const [aiInsight, setAiInsight] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/pm-scores`).then(r => r.json()).then(d => {
-      setData(d);
-      setSelectedPM(d.projectManagers[0]);
+    fetch(`${API}/pm-scores`).then(r => r.json()).then(data => {
+      setPmData(data);
+      if (data.projectManagers?.length > 0) setSelectedPM(data.projectManagers[0]);
     });
+    fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Analyze PM performance data and identify top performer strengths and areas for team-wide improvement' })
+    }).then(r => r.json()).then(data => setAiInsight(data.response?.split('\n')[0]));
   }, []);
 
-  if (!data) return <div>Loading...</div>;
+  if (!pmData) return <div style={{ padding: 40, textAlign: 'center' }}><Activity size={32} style={{ animation: 'spin 1s linear infinite' }} /> Loading PM data...</div>;
 
-  const TrendIcon = ({ trend }) => {
-    if (trend === 'up') return <TrendingUp size={16} className="health-green" />;
-    if (trend === 'down') return <TrendingDown size={16} className="health-red" />;
-    return <Minus size={16} className="health-yellow" />;
-  };
+  const metrics = ['delivery', 'budget', 'riskResolution', 'stakeholderSatisfaction', 'documentation'];
+  const metricLabels = { delivery: 'Delivery', budget: 'Budget', riskResolution: 'Risk Mgmt', stakeholderSatisfaction: 'Stakeholder', documentation: 'Documentation' };
 
-  const getScoreClass = (score) => {
-    if (score >= 85) return 'high';
-    if (score >= 70) return 'medium';
-    return 'low';
-  };
+  const getRadarData = (pm) => metrics.map(m => ({ metric: metricLabels[m], value: pm.scores[m], fullMark: 100 }));
 
-  const radarData = selectedPM ? [
-    { metric: 'Delivery', score: selectedPM.scores.delivery },
-    { metric: 'Budget', score: selectedPM.scores.budget },
-    { metric: 'Risk Mgmt', score: selectedPM.scores.riskResolution },
-    { metric: 'Stakeholder', score: selectedPM.scores.stakeholderSatisfaction },
-    { metric: 'Documentation', score: selectedPM.scores.documentation },
-  ] : [];
+  const trendData = [
+    { month: 'Aug', score: 80 }, { month: 'Sep', score: 82 }, { month: 'Oct', score: 81 },
+    { month: 'Nov', score: 83 }, { month: 'Dec', score: 84 }, { month: 'Jan', score: pmData.avgScore }
+  ];
 
-  const comparisonData = data.projectManagers.map(pm => ({
-    name: pm.name.split(' ')[0],
-    score: pm.overallScore
-  }));
+  const rankColors = ['#fbbf24', '#94a3b8', '#b45309'];
 
   return (
     <div>
       <div className="page-header">
         <h1>PM Performance Scoring</h1>
-        <p>AI-driven evaluation using balanced scorecard approach and multi-dimensional KPIs</p>
+        <p>AI-driven objective performance metrics with multi-dimensional scoring</p>
       </div>
 
-      <div className="grid-4 gap-20 mb-20">
-        <div className="card stat">
-          <div className="value">{data.projectManagers.length}</div>
-          <div className="label">Project Managers</div>
-        </div>
-        <div className="card stat">
-          <div className="value health-green">{data.avgScore}</div>
-          <div className="label">Avg Score</div>
-        </div>
-        <div className="card stat">
-          <div className="value">
-            <Award size={24} className="health-green" />
+      {/* AI Insight */}
+      {aiInsight && (
+        <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Brain size={24} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.8, marginBottom: 4, textTransform: 'uppercase' }}>AI Performance Insight</div>
+            <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>{aiInsight}</div>
           </div>
-          <div className="label">Top: {data.topPerformer.name}</div>
+          <div style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.15)', borderRadius: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{pmData.avgScore}</div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>Team Avg</div>
+          </div>
         </div>
-        <div className="card stat">
-          <div className="value health-red">{data.needsSupport.length}</div>
-          <div className="label">Needs Support</div>
-        </div>
+      )}
+
+      {/* Summary Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+        {[
+          { label: 'Project Managers', value: pmData.projectManagers.length, icon: Users, color: '#6366f1' },
+          { label: 'Team Average', value: `${pmData.avgScore}%`, icon: Target, color: '#10b981' },
+          { label: 'Top Performer', value: pmData.topPerformer.name.split(' ')[0], icon: Award, color: '#fbbf24' },
+          { label: 'Needs Support', value: pmData.needsSupport.length, icon: TrendingDown, color: '#ef4444' },
+        ].map((stat, i) => (
+          <div key={i} style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid #e2e8f0', borderTop: `4px solid ${stat.color}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <stat.icon size={18} color={stat.color} />
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{stat.label}</span>
+            </div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: stat.color }}>{stat.value}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="grid-2 gap-20">
-        <div className="card">
-          <h3>PM Leaderboard</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Name</th>
-                <th>Score</th>
-                <th>Trend</th>
-                <th>Workload</th>
-                <th>Projects</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.projectManagers.map((pm, i) => (
-                <tr 
-                  key={pm.id} 
-                  onClick={() => setSelectedPM(pm)}
-                  style={{ cursor: 'pointer', background: selectedPM?.id === pm.id ? '#f1f5f9' : 'transparent' }}
-                >
-                  <td>
-                    <span style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      width: 28, 
-                      height: 28, 
-                      borderRadius: '50%', 
-                      background: i === 0 ? '#ffd700' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : '#e5e7eb',
-                      fontWeight: 600,
-                      fontSize: '0.85rem'
-                    }}>
-                      {i + 1}
-                    </span>
-                  </td>
-                  <td>
-                    <strong>{pm.name}</strong>
-                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{pm.certifications.join(', ')}</div>
-                  </td>
-                  <td>
-                    <div className={`score-circle ${getScoreClass(pm.overallScore)}`} style={{ width: 45, height: 45, fontSize: '1rem' }}>
-                      {pm.overallScore}
-                    </div>
-                  </td>
-                  <td><TrendIcon trend={pm.trend} /></td>
-                  <td>
-                    <div className="flex flex-center gap-10">
-                      <div className="progress-bar" style={{ width: 60 }}>
-                        <div className={`fill ${pm.workload > 80 ? 'red' : pm.workload > 60 ? 'yellow' : 'green'}`} 
-                          style={{ width: `${pm.workload}%` }} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 24 }}>
+        {/* Main Content */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Leaderboard */}
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Award size={18} color="#fbbf24" /> Performance Leaderboard
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {pmData.projectManagers.map((pm, i) => (
+                <div key={pm.id} onClick={() => setSelectedPM(pm)} style={{
+                  display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
+                  background: selectedPM?.id === pm.id ? '#eff6ff' : '#f8fafc',
+                  border: selectedPM?.id === pm.id ? '2px solid #6366f1' : i === 0 ? '2px solid #fbbf24' : '1px solid #e2e8f0',
+                  borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s'
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    background: i < 3 ? rankColors[i] : '#e2e8f0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 700, fontSize: '0.9rem', color: i < 3 ? 'white' : '#64748b'
+                  }}>{i + 1}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>{pm.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{pm.certifications.join(', ')}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {pm.trend === 'up' ? <TrendingUp size={16} color="#10b981" /> : pm.trend === 'down' ? <TrendingDown size={16} color="#ef4444" /> : null}
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: pm.overallScore >= 85 ? '#059669' : pm.overallScore >= 75 ? '#d97706' : '#dc2626' }}>
+                        {pm.overallScore}
                       </div>
-                      <span style={{ fontSize: '0.85rem' }}>{pm.workload}%</span>
+                      <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>SCORE</div>
                     </div>
-                  </td>
-                  <td>{pm.activeProjects} active / {pm.completedProjects} done</td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* Team Trend */}
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 16 }}>Team Performance Trend</h3>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={trendData}>
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[75, 90]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Line type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} dot={{ r: 4, fill: '#6366f1' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div>
+        {/* Right Panel - Selected PM Details */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {selectedPM && (
-            <div className="card">
-              <h3>{selectedPM.name} - Detailed Scores</h3>
-              <ResponsiveContainer width="100%" height={280}>
-                <RadarChart data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="metric" />
-                  <PolarRadiusAxis domain={[0, 100]} />
-                  <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.5} />
-                </RadarChart>
-              </ResponsiveContainer>
-              
-              <div className="grid-2 gap-10 mt-20">
-                {Object.entries(selectedPM.scores).map(([key, value]) => (
-                  <div key={key} style={{ padding: 10, background: '#f8fafc', borderRadius: 6 }}>
-                    <div className="flex flex-between">
-                      <span style={{ textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}</span>
-                      <strong className={`health-${value >= 85 ? 'green' : value >= 70 ? 'yellow' : 'red'}`}>{value}</strong>
+            <>
+              {/* PM Card */}
+              <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #6366f1, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.25rem', fontWeight: 700 }}>
+                    {selectedPM.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{selectedPM.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedPM.experience} experience</div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Overall Score</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#6366f1' }}>{selectedPM.overallScore}%</div>
+                  </div>
+                  <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Active Projects</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>{selectedPM.activeProjects}</div>
+                  </div>
+                  <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Workload</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: selectedPM.workload > 85 ? '#ef4444' : '#10b981' }}>{selectedPM.workload}%</div>
+                  </div>
+                  <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Trend</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: selectedPM.trend === 'up' ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {selectedPM.trend === 'up' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                      {selectedPM.trend}
                     </div>
-                    <div className="progress-bar" style={{ marginTop: 5 }}>
-                      <div className={`fill ${value >= 85 ? 'green' : value >= 70 ? 'yellow' : 'red'}`} 
-                        style={{ width: `${value}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Radar Chart */}
+              <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>Competency Profile</h3>
+                <ResponsiveContainer width="100%" height={220}>
+                  <RadarChart data={getRadarData(selectedPM)}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10, fill: '#64748b' }} />
+                    <Radar name={selectedPM.name} dataKey="value" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Score Breakdown */}
+              <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 16 }}>Score Breakdown</h3>
+                {metrics.map(m => (
+                  <div key={m} style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{metricLabels[m]}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: selectedPM.scores[m] >= 85 ? '#059669' : selectedPM.scores[m] >= 75 ? '#d97706' : '#dc2626' }}>
+                        {selectedPM.scores[m]}%
+                      </span>
+                    </div>
+                    <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3 }}>
+                      <div style={{
+                        width: `${selectedPM.scores[m]}%`, height: '100%', borderRadius: 3,
+                        background: selectedPM.scores[m] >= 85 ? '#10b981' : selectedPM.scores[m] >= 75 ? '#f59e0b' : '#ef4444'
+                      }} />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
 
-      <div className="grid-2 gap-20 mt-20">
-        <div className="card">
-          <h3>Score Comparison</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={comparisonData}>
-              <XAxis dataKey="name" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip />
-              <Bar dataKey="score" fill="#6366f1" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="card">
-          <h3>Needs Support</h3>
-          {data.needsSupport.length > 0 ? (
-            data.needsSupport.map(pm => (
-              <div key={pm.id} className="alert warning">
-                <AlertCircle size={20} />
-                <div style={{ flex: 1 }}>
-                  <strong>{pm.name}</strong>
-                  <div style={{ fontSize: '0.85rem' }}>
-                    Score: {pm.overallScore} | Trend: {pm.trend} | Workload: {pm.workload}%
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: '#64748b', textAlign: 'center', padding: 20 }}>
-              ✅ All PMs are performing well
-            </p>
-          )}
-          
-          <div style={{ marginTop: 20, padding: 15, background: '#f0fdf4', borderRadius: 8, borderLeft: '3px solid #10b981' }}>
-            <strong style={{ color: '#059669' }}>💡 AI Recommendation:</strong>
-            <p style={{ margin: '5px 0 0', color: '#475569', fontSize: '0.9rem' }}>
-              {data.needsSupport.length > 0 
-                ? `Consider pairing ${data.needsSupport[0].name} with ${data.topPerformer.name} for mentorship. Also review workload distribution to prevent burnout.`
-                : 'Team is performing well. Consider cross-training to maintain knowledge sharing.'}
-            </p>
-          </div>
-        </div>
-      </div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
