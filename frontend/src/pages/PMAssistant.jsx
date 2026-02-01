@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, AlertCircle, AlertTriangle, Bot, Sparkles, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { Send, AlertCircle, AlertTriangle, Bot, Sparkles, RefreshCw, TrendingUp, TrendingDown, Calendar, Users, Clock, Zap, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function PMAssistant() {
   const [messages, setMessages] = useState([
-    { 
-      role: 'ai', 
-      content: "Hello! I'm your AI Project Management Assistant powered by GPT-5.2.\n\nI have real-time access to your portfolio data and can provide:\n\n• Project status & health analysis\n• Predictive risk assessment\n• Resource optimization recommendations\n• Schedule delay predictions\n• Budget variance analysis\n\nTry asking: \"What projects need attention?\" or click a quick action below.",
+    {
+      role: 'ai',
+      content: "Hello! I'm your AI Project Management Assistant.\n\nI have real-time access to your portfolio data and can provide:\n\n• Project status & health analysis\n• Predictive risk assessment\n• Resource optimization recommendations\n• Schedule delay predictions\n• Budget variance analysis\n\nTry asking: \"What projects need attention?\" or click a quick action below.",
       suggestions: ["Show critical risks", "Portfolio overview", "Resource bottlenecks", "Budget alerts"]
     }
   ]);
@@ -16,6 +16,7 @@ export default function PMAssistant() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conversationContext, setConversationContext] = useState([]);
+  const [expandedProject, setExpandedProject] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -120,8 +121,148 @@ export default function PMAssistant() {
     <div>
       <div className="page-header">
         <h1>AI Project Assistant</h1>
-        <p>Intelligent insights powered by GPT-5.2 with real-time portfolio data</p>
+        <p>Intelligent AI insights with real-time portfolio data</p>
       </div>
+
+      {/* AI Advisor Panel - Option 2: Narrative briefing style */}
+      {projects.length > 0 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 24,
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+            }}>
+              <Lightbulb size={18} color="white" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>AI Advisor Briefing</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Today's key recommendations based on portfolio analysis</div>
+            </div>
+          </div>
+
+          <div style={{
+            maxHeight: 180,
+            overflowY: 'auto',
+            paddingRight: 8
+          }}>
+            {/* Schedule Optimization Recommendations */}
+            {projects.filter(p => p.aiInsights?.optimizedSchedule).slice(0, 2).map(p => (
+              <div key={`schedule-${p.id}`} style={{
+                display: 'flex',
+                gap: 12,
+                padding: '12px 14px',
+                background: 'white',
+                borderRadius: 10,
+                marginBottom: 10,
+                border: '1px solid #e2e8f0',
+                alignItems: 'flex-start'
+              }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: '#eef2ff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Calendar size={14} color="#6366f1" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 2 }}>Schedule Optimization</div>
+                  <div style={{ fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.5 }}>
+                    <strong>{p.name}</strong> could save <span style={{ color: '#059669', fontWeight: 600 }}>{p.aiInsights.optimizedSchedule.timelineSavings}</span> by {p.aiInsights.optimizedSchedule.reasoning.toLowerCase()}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 4 }}>
+                    Confidence: {p.aiInsights.optimizedSchedule.confidence}%
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Resource Reallocation Recommendations */}
+            {projects.filter(p => p.aiInsights?.suggestedReallocation?.length > 0).slice(0, 2).map(p => (
+              p.aiInsights.suggestedReallocation.slice(0, 1).map((r, i) => (
+                <div key={`resource-${p.id}-${i}`} style={{
+                  display: 'flex',
+                  gap: 12,
+                  padding: '12px 14px',
+                  background: 'white',
+                  borderRadius: 10,
+                  marginBottom: 10,
+                  border: '1px solid #e2e8f0',
+                  alignItems: 'flex-start'
+                }}>
+                  <div style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    background: '#fef3c7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <Users size={14} color="#d97706" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 2 }}>Resource Reallocation</div>
+                    <div style={{ fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.5 }}>
+                      Recommend <strong>{r.action.toLowerCase()}ing {r.resource}</strong> to <strong>{p.name}</strong> ({r.hours}h/week) — expected impact: <span style={{ color: '#059669', fontWeight: 600 }}>{r.impact}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ))}
+
+            {/* Delay Warning */}
+            {projects.filter(p => p.aiInsights?.predictedCompletion && p.aiInsights.predictedCompletion.onTimeProb < 70).map(p => (
+              <div key={`delay-${p.id}`} style={{
+                display: 'flex',
+                gap: 12,
+                padding: '12px 14px',
+                background: 'white',
+                borderRadius: 10,
+                marginBottom: 10,
+                border: '1px solid #fecaca',
+                alignItems: 'flex-start'
+              }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: '#fef2f2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Clock size={14} color="#dc2626" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 2 }}>Delay Risk Alert</div>
+                  <div style={{ fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.5 }}>
+                    <strong>{p.name}</strong> has only <span style={{ color: '#dc2626', fontWeight: 600 }}>{p.aiInsights.predictedCompletion.onTimeProb}%</span> probability of on-time completion. Consider reviewing critical path activities.
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 24 }}>
         {/* Chat Panel */}
@@ -153,7 +294,7 @@ export default function PMAssistant() {
               </div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: '1rem' }}>AI Assistant</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>GPT-5.2 • Real-time data</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>AI-Powered • Real-time data</div>
               </div>
             </div>
             <div style={{ 
@@ -307,29 +448,173 @@ export default function PMAssistant() {
               ))}
             </div>
             
+            {/* Option 1: Expandable Project Cards with AI Insights */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {projects.map(p => (
-                <div key={p.id} style={{ 
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '10px 12px', background: '#f8fafc', borderRadius: 10,
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }} onClick={() => sendMessage(`Give me details about ${p.name}`)}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: 2 }}>{p.name}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{p.pmName}</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ 
-                        fontSize: '0.85rem', fontWeight: 700,
-                        color: p.health === 'green' ? '#059669' : p.health === 'yellow' ? '#d97706' : '#dc2626'
-                      }}>{p.progress}%</div>
+                <div key={p.id}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    background: expandedProject === p.id ? '#eef2ff' : '#f8fafc',
+                    borderRadius: expandedProject === p.id ? '10px 10px 0 0' : 10,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    border: expandedProject === p.id ? '1px solid #c7d2fe' : '1px solid transparent'
+                  }} onClick={() => setExpandedProject(expandedProject === p.id ? null : p.id)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {expandedProject === p.id ?
+                        <ChevronUp size={14} color="#6366f1" /> :
+                        <ChevronDown size={14} color="#94a3b8" />
+                      }
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: 2 }}>{p.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{p.pmName}</div>
+                      </div>
                     </div>
-                    {p.health === 'red' ? 
-                      <TrendingDown size={16} color="#dc2626" /> : 
-                      <TrendingUp size={16} color="#059669" />
-                    }
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{
+                          fontSize: '0.85rem', fontWeight: 700,
+                          color: p.health === 'green' ? '#059669' : p.health === 'yellow' ? '#d97706' : '#dc2626'
+                        }}>{p.progress}%</div>
+                      </div>
+                      {p.health === 'red' ?
+                        <TrendingDown size={16} color="#dc2626" /> :
+                        <TrendingUp size={16} color="#059669" />
+                      }
+                    </div>
                   </div>
+
+                  {/* Expanded AI Insights for this project */}
+                  {expandedProject === p.id && p.aiInsights && (
+                    <div style={{
+                      background: '#f8fafc',
+                      borderRadius: '0 0 10px 10px',
+                      padding: '12px',
+                      borderTop: 'none',
+                      border: '1px solid #c7d2fe',
+                      borderTop: '1px dashed #c7d2fe'
+                    }}>
+                      {/* Schedule Optimization */}
+                      {p.aiInsights.optimizedSchedule && (
+                        <div style={{
+                          display: 'flex',
+                          gap: 10,
+                          marginBottom: 10,
+                          padding: '8px 10px',
+                          background: 'white',
+                          borderRadius: 8,
+                          alignItems: 'flex-start'
+                        }}>
+                          <Calendar size={14} color="#6366f1" style={{ marginTop: 2 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 600, marginBottom: 2 }}>SCHEDULE</div>
+                            <div style={{ fontSize: '0.8rem', color: '#334155' }}>
+                              Potential savings of <strong>{p.aiInsights.optimizedSchedule.timelineSavings}</strong>
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 2 }}>
+                              {p.aiInsights.optimizedSchedule.reasoning}
+                            </div>
+                          </div>
+                          <div style={{
+                            padding: '2px 6px',
+                            background: '#eef2ff',
+                            borderRadius: 4,
+                            fontSize: '0.65rem',
+                            color: '#6366f1',
+                            fontWeight: 600
+                          }}>
+                            {p.aiInsights.optimizedSchedule.confidence}%
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Resource Suggestions */}
+                      {p.aiInsights.suggestedReallocation?.length > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          gap: 10,
+                          marginBottom: 10,
+                          padding: '8px 10px',
+                          background: 'white',
+                          borderRadius: 8,
+                          alignItems: 'flex-start'
+                        }}>
+                          <Users size={14} color="#d97706" style={{ marginTop: 2 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: 600, marginBottom: 2 }}>RESOURCES</div>
+                            {p.aiInsights.suggestedReallocation.slice(0, 2).map((r, i) => (
+                              <div key={i} style={{ fontSize: '0.8rem', color: '#334155', marginBottom: 2 }}>
+                                {r.action} <strong>{r.resource}</strong> • {r.hours}h/week → <span style={{ color: '#059669' }}>{r.impact}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delay Predictions */}
+                      {p.aiInsights.predictedCompletion && (
+                        <div style={{
+                          display: 'flex',
+                          gap: 10,
+                          padding: '8px 10px',
+                          background: 'white',
+                          borderRadius: 8,
+                          alignItems: 'center'
+                        }}>
+                          <Clock size={14} color="#dc2626" />
+                          <div style={{ fontSize: '0.7rem', color: '#dc2626', fontWeight: 600 }}>DELAY RISK</div>
+                          <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+                            <div style={{
+                              padding: '2px 8px',
+                              background: p.aiInsights.predictedCompletion.onTimeProb >= 70 ? '#dcfce7' : '#fef2f2',
+                              borderRadius: 4,
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              color: p.aiInsights.predictedCompletion.onTimeProb >= 70 ? '#166534' : '#dc2626'
+                            }}>
+                              {p.aiInsights.predictedCompletion.onTimeProb}% On-Time
+                            </div>
+                            <div style={{
+                              padding: '2px 8px',
+                              background: '#fffbeb',
+                              borderRadius: 4,
+                              fontSize: '0.7rem',
+                              color: '#92400e'
+                            }}>
+                              {p.aiInsights.predictedCompletion.delay1MonthProb}% 1mo delay
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Ask AI Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sendMessage(`Give me detailed analysis and recommendations for ${p.name}`);
+                        }}
+                        style={{
+                          marginTop: 10,
+                          width: '100%',
+                          padding: '8px',
+                          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6
+                        }}
+                      >
+                        <Sparkles size={12} /> Ask AI for Full Analysis
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

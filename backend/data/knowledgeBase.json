@@ -1,0 +1,151 @@
+{
+  "lessonsLearned": [
+    {
+      "id": "KB001",
+      "title": "Early Vendor Engagement",
+      "lesson": "Engaging vendors in design phase reduced integration issues by 40% across 3 projects",
+      "category": "Integration",
+      "source": "ERP Modernization 2024",
+      "applicablePatterns": ["vendor-integration", "third-party-api"],
+      "confidenceScore": 92,
+      "timesApplied": 5,
+      "successRate": 85
+    },
+    {
+      "id": "KB002",
+      "title": "Weekly Stakeholder Demos",
+      "lesson": "Bi-weekly demos reduced scope changes by 60% compared to monthly demos",
+      "category": "Stakeholder Management",
+      "source": "Cloud Migration 2024",
+      "applicablePatterns": ["stakeholder-heavy", "requirements-volatile"],
+      "confidenceScore": 88,
+      "timesApplied": 8,
+      "successRate": 90
+    },
+    {
+      "id": "KB003",
+      "title": "Legacy Integration Buffer",
+      "lesson": "Legacy system integrations require 2x estimated time - apply 100% buffer",
+      "category": "Estimation",
+      "source": "Customer Portal 2025",
+      "applicablePatterns": ["legacy-integration", "api-modernization"],
+      "confidenceScore": 95,
+      "timesApplied": 4,
+      "successRate": 100
+    },
+    {
+      "id": "KB004",
+      "title": "Data Governance First",
+      "lesson": "Establishing data governance framework in sprint 1 prevented 4 weeks average rework",
+      "category": "Data Management",
+      "source": "Data Analytics Platform 2025",
+      "applicablePatterns": ["data-heavy", "analytics", "reporting"],
+      "confidenceScore": 85,
+      "timesApplied": 3,
+      "successRate": 92
+    },
+    {
+      "id": "KB005",
+      "title": "Automated Testing ROI",
+      "lesson": "Automated test suites reduced regression bugs by 60% and QA time by 35%",
+      "category": "Quality Assurance",
+      "source": "Cloud Migration 2025",
+      "applicablePatterns": ["continuous-deployment", "agile", "high-release-frequency"],
+      "confidenceScore": 90,
+      "timesApplied": 6,
+      "successRate": 88
+    },
+    {
+      "id": "KB006",
+      "title": "Single Vendor Strategy",
+      "lesson": "Multi-cloud strategy added 15% overhead - single vendor recommended for projects under $2M",
+      "category": "Architecture",
+      "source": "Cloud Migration 2024",
+      "applicablePatterns": ["cloud-migration", "infrastructure"],
+      "confidenceScore": 78,
+      "timesApplied": 2,
+      "successRate": 75
+    },
+    {
+      "id": "KB007",
+      "title": "API Versioning Strategy",
+      "lesson": "Implementing API versioning from day 1 prevented 3 breaking changes on average",
+      "category": "Technical",
+      "source": "Mobile App Revamp 2025",
+      "applicablePatterns": ["mobile", "api-development", "microservices"],
+      "confidenceScore": 87,
+      "timesApplied": 4,
+      "successRate": 85
+    },
+    {
+      "id": "KB008",
+      "title": "Business User Sprint Reviews",
+      "lesson": "Including business users in sprint reviews increased adoption rate by 35%",
+      "category": "User Adoption",
+      "source": "Data Analytics Platform 2025",
+      "applicablePatterns": ["user-facing", "reporting", "analytics"],
+      "confidenceScore": 82,
+      "timesApplied": 5,
+      "successRate": 80
+    }
+  ],
+  "riskPatterns": [
+    {
+      "id": "RP001",
+      "pattern": "Budget Overrun Pattern",
+      "indicators": ["spend-rate > 1.2", "progress < 50%", "health = red"],
+      "historicalOccurrences": 12,
+      "avgImpact": 85,
+      "successfulMitigations": [
+        { "action": "Scope freeze", "successRate": 78, "avgRecovery": "4 weeks" },
+        { "action": "Resource optimization", "successRate": 65, "avgRecovery": "6 weeks" },
+        { "action": "Phased delivery", "successRate": 82, "avgRecovery": "3 weeks" }
+      ]
+    },
+    {
+      "id": "RP002",
+      "pattern": "Resource Shortage Pattern",
+      "indicators": ["pm-workload > 85%", "team-turnover > 15%", "skill-gap-detected"],
+      "historicalOccurrences": 8,
+      "avgImpact": 70,
+      "successfulMitigations": [
+        { "action": "Cross-training", "successRate": 72, "avgRecovery": "3 weeks" },
+        { "action": "External contractor", "successRate": 85, "avgRecovery": "2 weeks" },
+        { "action": "Workload redistribution", "successRate": 68, "avgRecovery": "4 weeks" }
+      ]
+    },
+    {
+      "id": "RP003",
+      "pattern": "Scope Creep Pattern",
+      "indicators": ["change-requests > 3/month", "requirements-volatility > 25%"],
+      "historicalOccurrences": 15,
+      "avgImpact": 60,
+      "successfulMitigations": [
+        { "action": "Change control board", "successRate": 88, "avgRecovery": "2 weeks" },
+        { "action": "Scope freeze period", "successRate": 75, "avgRecovery": "3 weeks" },
+        { "action": "Agile transition", "successRate": 82, "avgRecovery": "6 weeks" }
+      ]
+    },
+    {
+      "id": "RP004",
+      "pattern": "Technical Debt Pattern",
+      "indicators": ["code-quality-score < 60", "bug-rate > 2/sprint", "refactor-backlog > 20%"],
+      "historicalOccurrences": 10,
+      "avgImpact": 55,
+      "successfulMitigations": [
+        { "action": "Dedicated refactor sprint", "successRate": 80, "avgRecovery": "2 weeks" },
+        { "action": "Tech lead assignment", "successRate": 75, "avgRecovery": "4 weeks" },
+        { "action": "Pair programming", "successRate": 70, "avgRecovery": "3 weeks" }
+      ]
+    }
+  ],
+  "portfolioInsights": {
+    "avgProjectDuration": "14 months",
+    "avgBudgetVariance": "+8%",
+    "avgScheduleVariance": "+12%",
+    "successRate": 78,
+    "topRiskCategories": ["Resource", "Scope", "Technical"],
+    "bestPerformingObjective": "Cost Optimization",
+    "worstPerformingObjective": "Customer Experience"
+  }
+}
