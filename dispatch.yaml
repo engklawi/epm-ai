@@ -1,0 +1,4 @@
+dispatch:
+  # Route custom domain to frontend service
+  - url: "bayan-dga.macsoft.ai/*"
+    service: frontend
