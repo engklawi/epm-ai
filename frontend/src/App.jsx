@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { MessageSquare, LayoutDashboard, Target, AlertTriangle, FileText, Users, Activity, Compass, LineChart, GraduationCap } from 'lucide-react';
-import PMAssistant from './pages/PMAssistant';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { LayoutDashboard, Target, AlertTriangle, FileText, Users, Activity, Compass, LineChart, GraduationCap, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import DirectorsDashboard from './pages/DirectorsDashboard';
 import StrategyROI from './pages/StrategyROI';
 import PMOPerformance from './pages/PMOPerformance';
@@ -10,10 +10,10 @@ import Documentation from './pages/Documentation';
 import ExecutivePredictions from './pages/ExecutivePredictions';
 import PMScoring from './pages/PMScoring';
 import PMDevelopment from './pages/PMDevelopment';
+import BayanPanel from './components/BayanPanel';
 import './App.css';
 
 const navItems = [
-  { path: '/', icon: MessageSquare, label: 'AI Assistant', desc: 'Chat & Insights' },
   { path: '/dashboard', icon: LayoutDashboard, label: 'Portfolio', desc: 'Programs Overview' },
   { path: '/strategy', icon: Target, label: 'Strategy & ROI', desc: 'Business Alignment' },
   { path: '/pmo', icon: Activity, label: 'PMO Performance', desc: 'Process Metrics' },
@@ -25,56 +25,136 @@ const navItems = [
   { path: '/pm-dev', icon: GraduationCap, label: 'Development', desc: 'Training & Growth' },
 ];
 
+const API = 'http://localhost:3001/api';
+
 function App() {
+  const [psStatus, setPsStatus] = useState({ connected: false, loading: true });
+  const [refreshing, setRefreshing] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Default collapsed
+
+  const checkStatus = () => {
+    fetch(`${API}/ps/status`)
+      .then(r => r.json())
+      .then(data => setPsStatus({ connected: data.connected, lastSync: data.lastSync, loading: false }))
+      .catch(() => setPsStatus({ connected: false, loading: false }));
+  };
+
+  const manualRefresh = () => {
+    setRefreshing(true);
+    setPsStatus(prev => ({ ...prev, loading: true }));
+    fetch(`${API}/ps/status`)
+      .then(r => r.json())
+      .then(data => setPsStatus({ connected: data.connected, lastSync: data.lastSync, loading: false }))
+      .catch(() => setPsStatus({ connected: false, loading: false }))
+      .finally(() => setTimeout(() => setRefreshing(false), 600));
+  };
+
+  useEffect(() => {
+    checkStatus();
+    const interval = setInterval(checkStatus, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <BrowserRouter>
-      <div className="app">
-        <nav className="sidebar">
-          <div className="logo">
-            <h2>EPM Intelligence</h2>
-            <span>Microsoft Project + AI</span>
+      <div className={`app ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        {/* Left Sidebar - Navigation */}
+        <nav className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+          <div className="logo" style={{ display: 'flex', justifyContent: 'center' }}>
+            <img
+              src="/DGA Logo-01_0.png"
+              alt="DGA"
+              style={{
+                width: sidebarCollapsed ? 44 : 160,
+                height: 'auto',
+                objectFit: 'contain',
+                filter: 'brightness(0) invert(1)'
+              }}
+            />
           </div>
           <div style={{ flex: 1, overflow: 'auto', paddingBottom: 80 }}>
             <ul>
               {navItems.map(({ path, icon: Icon, label, desc }) => (
                 <li key={path}>
-                  <NavLink to={path} className={({ isActive }) => isActive ? 'active' : ''}>
+                  <NavLink to={path} className={({ isActive }) => isActive ? 'active' : ''} title={sidebarCollapsed ? label : undefined}>
                     <Icon size={18} strokeWidth={1.8} />
-                    <div>
-                      <span>{label}</span>
-                      <small>{desc}</small>
-                    </div>
+                    {!sidebarCollapsed && (
+                      <div>
+                        <span>{label}</span>
+                        <small>{desc}</small>
+                      </div>
+                    )}
                   </NavLink>
                 </li>
               ))}
             </ul>
           </div>
+          {/* Toggle Button */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="sidebar-toggle"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+          {/* PS Connection Indicator at bottom */}
           <div style={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            padding: '16px',
+            padding: sidebarCollapsed ? '12px 8px' : '16px',
             background: 'linear-gradient(180deg, transparent 0%, var(--slate-900) 30%)',
           }}>
             <div style={{
-              padding: '12px 14px',
-              background: 'rgba(255,255,255,0.04)',
+              padding: sidebarCollapsed ? '8px' : '10px 14px',
+              background: psStatus.connected ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
               borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.06)'
+              border: `1px solid ${psStatus.connected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.15)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+              gap: sidebarCollapsed ? 0 : 10
             }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 2, letterSpacing: '0.05em' }}>
-                DEMO VERSION
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>
-                v1.0 · Enterprise POC
-              </div>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: psStatus.loading ? '#94a3b8' : psStatus.connected ? '#22c55e' : '#ef4444',
+                boxShadow: psStatus.connected ? '0 0 6px rgba(34, 197, 94, 0.5)' : 'none',
+                animation: psStatus.connected ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+                flexShrink: 0
+              }} title={sidebarCollapsed ? (psStatus.connected ? 'Connected to Project Server' : 'Disconnected') : undefined} />
+              {!sidebarCollapsed && (
+                <>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 600, color: psStatus.connected ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.8)', letterSpacing: '0.03em' }}>
+                      {psStatus.loading ? 'CHECKING...' : psStatus.connected ? 'LIVE — EPM SERVER' : 'DISCONNECTED'}
+                    </div>
+                    {psStatus.lastSync && (
+                      <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>
+                        Last sync: {new Date(psStatus.lastSync).toLocaleTimeString()}
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={manualRefresh} style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    padding: 4, borderRadius: 4, display: 'flex', flexShrink: 0,
+                    color: psStatus.connected ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.5)',
+                    transition: 'all 0.2s'
+                  }} title="Refresh connection">
+                    <RefreshCw size={13} style={{
+                      animation: refreshing ? 'spin 0.6s linear infinite' : 'none'
+                    }} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </nav>
+
+        {/* Main Content Area */}
         <main className="content">
           <Routes>
-            <Route path="/" element={<PMAssistant />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DirectorsDashboard />} />
             <Route path="/strategy" element={<StrategyROI />} />
             <Route path="/pmo" element={<PMOPerformance />} />
@@ -86,6 +166,9 @@ function App() {
             <Route path="/pm-dev" element={<PMDevelopment />} />
           </Routes>
         </main>
+
+        {/* Right Sidebar - Bayan AI Panel */}
+        <BayanPanel />
       </div>
     </BrowserRouter>
   );

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { AlertTriangle, ArrowRight, TrendingUp } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function StrategicAlignment() {
   const [strategy, setStrategy] = useState(null);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, Sparkles, CheckCircle, Clock, RefreshCw, FileCode, FilePlus } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function Documentation() {
   const [projects, setProjects] = useState([]);
@@ -58,7 +58,7 @@ export default function Documentation() {
     <div>
       <div className="page-header">
         <h1>AI Document Generation</h1>
-        <p>Generate professional project documents instantly using GPT-5.2</p>
+        <p>Generate professional project documents instantly using AI</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: 24 }}>
@@ -198,7 +198,18 @@ export default function Documentation() {
                 <span style={{ padding: '4px 12px', background: '#dcfce7', color: '#166534', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Sparkles size={12} /> AI Generated
                 </span>
-                <button style={{ padding: '6px 14px', background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  onClick={() => {
+                    const content = document.sections?.map(s => `${s.heading}\n${'='.repeat(s.heading.length)}\n${s.content}\n`).join('\n') || '';
+                    const blob = new Blob([`${document.title}\n${'='.repeat(document.title.length)}\nGenerated: ${new Date(document.generatedAt).toLocaleString()}\n\n${content}`], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = window.document.createElement('a');
+                    a.href = url;
+                    a.download = `${document.title.replace(/\s+/g, '-').toLowerCase()}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  style={{ padding: '6px 14px', background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Download size={14} /> Export
                 </button>
               </div>
@@ -217,7 +228,7 @@ export default function Documentation() {
             {loading && (
               <div style={{ textAlign: 'center', color: '#6366f1', padding: '80px 40px' }}>
                 <RefreshCw size={48} style={{ marginBottom: 16, animation: 'spin 1s linear infinite' }} />
-                <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 8 }}>Generating with GPT-5.2...</div>
+                <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 8 }}>Generating with AI...</div>
                 <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>AI is analyzing project data and creating your document</div>
               </div>
             )}

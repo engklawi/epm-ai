@@ -1,22 +1,60 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, Line, AreaChart, Area } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, FolderKanban, Target, AlertTriangle, Activity, Zap, Brain } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, FolderKanban, Target, AlertTriangle, Activity, Zap, Brain, Sliders, PlayCircle } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function DirectorsDashboard() {
   const [portfolio, setPortfolio] = useState(null);
   const [aiInsight, setAiInsight] = useState(null);
 
+  // What-If Simulator State
+  const [scenarioMode, setScenarioMode] = useState(false);
+  const [budgetChange, setBudgetChange] = useState(0);
+  const [resourceChange, setResourceChange] = useState(0);
+  const [scopeChange, setScopeChange] = useState(0);
+  const [scenarioResults, setScenarioResults] = useState(null);
+
   useEffect(() => {
     fetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
-    // Fetch AI insights for executive summary
     fetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Give me a 2-sentence executive summary of the portfolio health and top recommendation' })
     }).then(r => r.json()).then(data => setAiInsight(data.response));
   }, []);
+
+  // Calculate What-If Scenario Impact
+  const calculateScenario = () => {
+    if (!portfolio) return;
+
+    const baseSuccessRate = 65;
+    const baseBudgetHealth = 100 - Math.round((portfolio.totalSpent / portfolio.totalBudget) * 100);
+    const baseTimelineRisk = portfolio.projects.filter(p => p.health === 'red').length * 20;
+
+    // AI-simulated impact calculations
+    const budgetImpact = budgetChange * 0.8; // +10% budget = +8% success
+    const resourceImpact = resourceChange * 1.2; // +10% resources = +12% success
+    const scopeImpact = scopeChange * -0.5; // -10% scope = +5% success (reduction helps)
+
+    const newSuccessRate = Math.min(95, Math.max(30, baseSuccessRate + budgetImpact + resourceImpact - scopeImpact));
+    const newBudgetHealth = Math.max(0, baseBudgetHealth - budgetChange);
+    const newTimelineRisk = Math.max(0, baseTimelineRisk - resourceChange * 2 + scopeChange);
+
+    setScenarioResults({
+      successRate: Math.round(newSuccessRate),
+      budgetHealth: Math.round(newBudgetHealth),
+      timelineRisk: Math.round(newTimelineRisk),
+      recommendation: newSuccessRate > 80
+        ? 'Scenario shows strong improvement. Consider implementing these changes.'
+        : newSuccessRate > 70
+          ? 'Moderate improvement projected. May need additional adjustments.'
+          : 'Limited impact. Consider alternative strategies.',
+      confidence: 78 + Math.round((budgetChange + resourceChange) / 5),
+      projectedSavings: budgetChange < 0 ? `$${Math.abs(budgetChange) * 50}K saved` : `$${budgetChange * 50}K additional investment`,
+      timelineChange: resourceChange > 0 ? `-${resourceChange}% faster` : `+${Math.abs(resourceChange)}% slower`
+    });
+  };
 
   if (!portfolio) return (
     <div style={{ padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
@@ -46,7 +84,6 @@ export default function DirectorsDashboard() {
   const criticalCount = portfolio.healthBreakdown.red;
   const avgAlignment = Math.round(portfolio.projects.reduce((sum, p) => sum + p.alignmentScore, 0) / portfolio.projects.length);
 
-  // Trend data for mini charts
   const trendData = [
     { month: 'Aug', value: 58 },
     { month: 'Sep', value: 62 },
@@ -63,37 +100,6 @@ export default function DirectorsDashboard() {
         <p>Executive overview with AI-powered insights and real-time analytics</p>
       </div>
 
-      {/* AI Executive Summary */}
-      {aiInsight && (
-        <div style={{ 
-          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', 
-          borderRadius: 16, 
-          padding: '20px 24px', 
-          marginBottom: 24,
-          color: 'white',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 16
-        }}>
-          <div style={{ 
-            width: 44, height: 44, borderRadius: 12, 
-            background: 'rgba(255,255,255,0.2)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <Brain size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.9, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              AI Executive Summary
-            </div>
-            <div style={{ fontSize: '0.95rem', lineHeight: 1.6, opacity: 0.95 }}>
-              {aiInsight.split('\n')[0]}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
@@ -103,9 +109,9 @@ export default function DirectorsDashboard() {
           { label: 'Avg ROI', value: avgROI, suffix: '%', color: '#10b981', icon: TrendingUp, trend: 'Expected return' },
           { label: 'Strategic Fit', value: avgAlignment, suffix: '%', color: '#8b5cf6', icon: Target, trend: 'Alignment score' },
         ].map((kpi, i) => (
-          <div key={i} style={{ 
-            background: 'white', 
-            borderRadius: 16, 
+          <div key={i} style={{
+            background: 'white',
+            borderRadius: 16,
             padding: '20px',
             border: '1px solid #e2e8f0',
             position: 'relative',
@@ -145,7 +151,7 @@ export default function DirectorsDashboard() {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip 
+              <Tooltip
                 formatter={(value, name) => [`${value} projects`, name]}
                 contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               />
@@ -170,7 +176,7 @@ export default function DirectorsDashboard() {
             <BarChart data={budgetData} barGap={2}>
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-              <Tooltip 
+              <Tooltip
                 formatter={(value, name) => [`$${value}M`, name === 'budget' ? 'Budget' : 'Spent']}
                 contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               />
@@ -240,7 +246,7 @@ export default function DirectorsDashboard() {
                 if (value > 50) return { bg: '#fffbeb', color: '#92400e' };
                 return { bg: '#f0fdf4', color: '#166534' };
               };
-              
+
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '14px 24px' }}>
@@ -248,38 +254,38 @@ export default function DirectorsDashboard() {
                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{p.pmName}</div>
                   </td>
                   <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '4px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
                       ...getHeatColor(p.riskScore)
                     }}>{p.riskScore}%</span>
                   </td>
                   <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '4px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
                       ...getHeatColor(budgetRisk)
                     }}>{budgetRisk}%</span>
                   </td>
                   <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '4px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
                       background: scheduleRisk === 'High' ? '#fef2f2' : scheduleRisk === 'Medium' ? '#fffbeb' : '#f0fdf4',
                       color: scheduleRisk === 'High' ? '#991b1b' : scheduleRisk === 'Medium' ? '#92400e' : '#166534'
                     }}>{scheduleRisk}</span>
                   </td>
                   <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '4px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
                       ...getHeatColor(p.alignmentScore, true)
                     }}>{p.alignmentScore}%</span>
                   </td>
                   <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '4px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
                       background: '#f0fdf4', color: '#166534'
                     }}>{p.roi}%</span>
                   </td>
                   <td style={{ padding: '14px 24px', textAlign: 'center' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600,
                       background: p.health === 'green' ? '#dcfce7' : p.health === 'yellow' ? '#fef3c7' : '#fee2e2',
                       color: p.health === 'green' ? '#166534' : p.health === 'yellow' ? '#92400e' : '#991b1b'
@@ -293,7 +299,7 @@ export default function DirectorsDashboard() {
       </div>
 
       {/* AI Recommendations */}
-      <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+      <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 24 }}>
         <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
           <Zap size={18} color="#f59e0b" /> AI-Generated Recommendations
         </h3>
@@ -303,12 +309,12 @@ export default function DirectorsDashboard() {
             { title: 'Budget Optimization', desc: 'Reallocate $200K from Cloud Migration contingency to Data Analytics for accelerated ROI.', priority: 'medium' },
             { title: 'Strategic Move', desc: 'Fast-track Data Analytics Platform - highest ROI (320%) with strong strategic alignment.', priority: 'low' },
           ].map((rec, i) => (
-            <div key={i} style={{ 
-              padding: 20, borderRadius: 12, 
+            <div key={i} style={{
+              padding: 20, borderRadius: 12,
               background: rec.priority === 'high' ? '#fef2f2' : rec.priority === 'medium' ? '#fffbeb' : '#f0fdf4',
               border: `1px solid ${rec.priority === 'high' ? '#fecaca' : rec.priority === 'medium' ? '#fde68a' : '#bbf7d0'}`
             }}>
-              <div style={{ 
+              <div style={{
                 fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: 8,
                 color: rec.priority === 'high' ? '#dc2626' : rec.priority === 'medium' ? '#d97706' : '#16a34a'
               }}>
@@ -319,6 +325,185 @@ export default function DirectorsDashboard() {
           ))}
         </div>
       </div>
+
+      {/* AI Executive Summary - at bottom */}
+      {aiInsight && (
+        <div style={{
+          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+          borderRadius: scenarioMode ? '16px 16px 0 0' : 16,
+          padding: '20px 24px',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 16
+        }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: 'rgba(255,255,255,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Brain size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.9, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              AI Executive Summary
+            </div>
+            <div style={{ fontSize: '0.95rem', lineHeight: 1.6, opacity: 0.95, whiteSpace: 'pre-line' }}>
+              {aiInsight}
+            </div>
+          </div>
+          <button
+            onClick={() => setScenarioMode(!scenarioMode)}
+            style={{
+              padding: '10px 16px',
+              background: scenarioMode ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.2)',
+              border: 'none',
+              borderRadius: 10,
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              transition: 'all 0.2s'
+            }}
+          >
+            <Sliders size={16} />
+            {scenarioMode ? 'Hide Simulator' : 'What-If Analysis'}
+          </button>
+        </div>
+      )}
+
+      {/* What-If Scenario Simulator - appears under AI Summary */}
+      {scenarioMode && (
+        <div style={{
+          background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          borderRadius: '0 0 16px 16px',
+          padding: 24,
+          color: 'white',
+          marginTop: -1,
+          borderTop: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <Sliders size={20} />
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>What-If Scenario Simulator</h3>
+            <span style={{ padding: '4px 10px', background: 'rgba(99, 102, 241, 0.3)', borderRadius: 6, fontSize: '0.7rem' }}>AI-Powered</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 300px', gap: 24 }}>
+            {/* Budget Slider */}
+            <div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: 8 }}>Budget Adjustment</div>
+              <input
+                type="range"
+                min="-20"
+                max="30"
+                value={budgetChange}
+                onChange={(e) => setBudgetChange(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#6366f1' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: 4 }}>
+                <span style={{ color: budgetChange < 0 ? '#ef4444' : budgetChange > 0 ? '#10b981' : '#94a3b8' }}>
+                  {budgetChange > 0 ? '+' : ''}{budgetChange}%
+                </span>
+                <span style={{ opacity: 0.6 }}>{budgetChange > 0 ? 'Increase' : budgetChange < 0 ? 'Decrease' : 'No change'}</span>
+              </div>
+            </div>
+
+            {/* Resource Slider */}
+            <div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: 8 }}>Resource Allocation</div>
+              <input
+                type="range"
+                min="-15"
+                max="25"
+                value={resourceChange}
+                onChange={(e) => setResourceChange(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#6366f1' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: 4 }}>
+                <span style={{ color: resourceChange > 0 ? '#10b981' : resourceChange < 0 ? '#ef4444' : '#94a3b8' }}>
+                  {resourceChange > 0 ? '+' : ''}{resourceChange}%
+                </span>
+                <span style={{ opacity: 0.6 }}>{resourceChange > 0 ? 'Add resources' : resourceChange < 0 ? 'Reduce' : 'No change'}</span>
+              </div>
+            </div>
+
+            {/* Scope Slider */}
+            <div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: 8 }}>Scope Adjustment</div>
+              <input
+                type="range"
+                min="-30"
+                max="20"
+                value={scopeChange}
+                onChange={(e) => setScopeChange(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#6366f1' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: 4 }}>
+                <span style={{ color: scopeChange < 0 ? '#10b981' : scopeChange > 0 ? '#ef4444' : '#94a3b8' }}>
+                  {scopeChange > 0 ? '+' : ''}{scopeChange}%
+                </span>
+                <span style={{ opacity: 0.6 }}>{scopeChange < 0 ? 'Reduce scope' : scopeChange > 0 ? 'Expand' : 'No change'}</span>
+              </div>
+            </div>
+
+            {/* Run Simulation Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <button
+                onClick={calculateScenario}
+                style={{
+                  padding: '14px 24px',
+                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)'
+                }}
+              >
+                <PlayCircle size={18} />
+                Run AI Simulation
+              </button>
+            </div>
+          </div>
+
+          {/* Scenario Results */}
+          {scenarioResults && (
+            <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: 12, textTransform: 'uppercase' }}>Simulation Results (Confidence: {scenarioResults.confidence}%)</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 10 }}>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: 4 }}>Success Probability</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 700, color: scenarioResults.successRate > 75 ? '#10b981' : scenarioResults.successRate > 60 ? '#f59e0b' : '#ef4444' }}>
+                    {scenarioResults.successRate}%
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 10 }}>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: 4 }}>Budget Impact</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 600, marginTop: 8 }}>{scenarioResults.projectedSavings}</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 10 }}>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: 4 }}>Timeline Impact</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 600, marginTop: 8 }}>{scenarioResults.timelineChange}</div>
+                </div>
+                <div style={{ background: 'rgba(99, 102, 241, 0.3)', padding: 16, borderRadius: 10 }}>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: 4 }}>AI Recommendation</div>
+                  <div style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>{scenarioResults.recommendation}</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <style>{`
         @keyframes pulse {

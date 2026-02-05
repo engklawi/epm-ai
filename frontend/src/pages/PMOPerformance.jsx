@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
 import { TrendingUp, CheckCircle, Clock, DollarSign, Brain, Award, Target, Zap } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function PMOPerformance() {
   const [portfolio, setPortfolio] = useState(null);
@@ -13,8 +13,8 @@ export default function PMOPerformance() {
     fetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Analyze PMO performance metrics and give 1 key insight with recommended action' })
-    }).then(r => r.json()).then(data => setAiInsight(data.response?.split('\n')[0]));
+      body: JSON.stringify({ message: 'Analyze PMO performance metrics and give 1 key insight with recommended action in 2-3 sentences' })
+    }).then(r => r.json()).then(data => setAiInsight(data.response));
   }, []);
 
   if (!portfolio) return <div style={{ padding: 40 }}>Loading...</div>;
@@ -59,23 +59,6 @@ export default function PMOPerformance() {
         <h1>PMO Performance</h1>
         <p>AI-driven PMO maturity assessment and continuous improvement insights</p>
       </div>
-
-      {/* AI Insight Banner */}
-      {aiInsight && (
-        <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Brain size={22} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.9, marginBottom: 4, textTransform: 'uppercase' }}>AI Performance Insight</div>
-            <div style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>{aiInsight}</div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '12px 20px', background: 'rgba(255,255,255,0.15)', borderRadius: 12 }}>
-            <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{maturityScore}%</div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>Maturity Score</div>
-          </div>
-        </div>
-      )}
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
@@ -177,7 +160,7 @@ export default function PMOPerformance() {
       </div>
 
       {/* AI Recommendations */}
-      <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+      <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 24 }}>
         <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Zap size={18} color="#f59e0b" /> AI Improvement Recommendations
         </h3>
@@ -198,6 +181,23 @@ export default function PMOPerformance() {
           ))}
         </div>
       </div>
+
+      {/* AI Insight Banner */}
+      {aiInsight && (
+        <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', borderRadius: 16, padding: '20px 24px', color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Brain size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.9, marginBottom: 4, textTransform: 'uppercase' }}>AI Performance Insight</div>
+            <div style={{ fontSize: '0.95rem', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{aiInsight}</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '12px 20px', background: 'rgba(255,255,255,0.15)', borderRadius: 12 }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{maturityScore}%</div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>Maturity Score</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

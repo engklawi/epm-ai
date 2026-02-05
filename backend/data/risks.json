@@ -12,7 +12,28 @@
     "status": "Open",
     "mitigation": "Cross-train team members, establish resource buffer",
     "predictedDate": "2026-02-15",
-    "trend": "increasing"
+    "trend": "increasing",
+    "aiAnalysis": {
+      "patternMatch": "RP002",
+      "patternName": "Resource Shortage Pattern",
+      "confidence": 85,
+      "historicalSimilarity": 78,
+      "recommendedMitigation": {
+        "primary": "External contractor",
+        "successRate": 85,
+        "estimatedRecovery": "2 weeks",
+        "reasoning": "Historical data shows external contractors resolved similar issues in 85% of cases"
+      },
+      "alternativeMitigations": [
+        { "action": "Cross-training", "successRate": 72 },
+        { "action": "Workload redistribution", "successRate": 68 }
+      ],
+      "escalationProbability": 45,
+      "monteCarloOutcomes": {
+        "noAction": { "escalationProb": 78, "impactRange": "$180K-$250K" },
+        "withMitigation": { "escalationProb": 22, "impactRange": "$40K-$80K" }
+      }
+    }
   },
   {
     "id": "R002",
@@ -27,7 +48,28 @@
     "status": "Monitoring",
     "mitigation": "Strict change control process, regular scope reviews",
     "predictedDate": "2026-03-01",
-    "trend": "stable"
+    "trend": "stable",
+    "aiAnalysis": {
+      "patternMatch": "RP003",
+      "patternName": "Scope Creep Pattern",
+      "confidence": 82,
+      "historicalSimilarity": 75,
+      "recommendedMitigation": {
+        "primary": "Change control board",
+        "successRate": 88,
+        "estimatedRecovery": "2 weeks",
+        "reasoning": "Based on 15 similar occurrences, formal change control is most effective"
+      },
+      "alternativeMitigations": [
+        { "action": "Scope freeze period", "successRate": 75 },
+        { "action": "Agile transition", "successRate": 82 }
+      ],
+      "escalationProbability": 25,
+      "monteCarloOutcomes": {
+        "noAction": { "escalationProb": 55, "impactRange": "$120K-$180K" },
+        "withMitigation": { "escalationProb": 15, "impactRange": "$20K-$50K" }
+      }
+    }
   },
   {
     "id": "R003",
@@ -42,7 +84,29 @@
     "status": "Critical",
     "mitigation": "Immediate cost review, scope reduction, stakeholder escalation",
     "predictedDate": "2025-08-15",
-    "trend": "increasing"
+    "trend": "increasing",
+    "aiAnalysis": {
+      "patternMatch": "RP001",
+      "patternName": "Budget Overrun Pattern",
+      "confidence": 95,
+      "historicalSimilarity": 92,
+      "recommendedMitigation": {
+        "primary": "Phased delivery",
+        "successRate": 82,
+        "estimatedRecovery": "3 weeks",
+        "reasoning": "Delivering MVP first with 82% success rate; full scope in phase 2"
+      },
+      "alternativeMitigations": [
+        { "action": "Scope freeze", "successRate": 78 },
+        { "action": "Resource optimization", "successRate": 65 }
+      ],
+      "escalationProbability": 72,
+      "monteCarloOutcomes": {
+        "noAction": { "escalationProb": 92, "impactRange": "$280K-$400K" },
+        "withMitigation": { "escalationProb": 35, "impactRange": "$80K-$150K" }
+      },
+      "lessonsApplied": ["KB003", "KB001"]
+    }
   },
   {
     "id": "R004",
@@ -57,7 +121,28 @@
     "status": "Open",
     "mitigation": "Allocate sprint for refactoring, bring in technical consultant",
     "predictedDate": "2025-07-30",
-    "trend": "stable"
+    "trend": "stable",
+    "aiAnalysis": {
+      "patternMatch": "RP004",
+      "patternName": "Technical Debt Pattern",
+      "confidence": 88,
+      "historicalSimilarity": 80,
+      "recommendedMitigation": {
+        "primary": "Dedicated refactor sprint",
+        "successRate": 80,
+        "estimatedRecovery": "2 weeks",
+        "reasoning": "Similar tech debt issues resolved in 80% of cases with focused refactoring"
+      },
+      "alternativeMitigations": [
+        { "action": "Tech lead assignment", "successRate": 75 },
+        { "action": "Pair programming", "successRate": 70 }
+      ],
+      "escalationProbability": 35,
+      "monteCarloOutcomes": {
+        "noAction": { "escalationProb": 68, "impactRange": "$100K-$160K" },
+        "withMitigation": { "escalationProb": 18, "impactRange": "$30K-$60K" }
+      }
+    }
   },
   {
     "id": "R005",
@@ -72,7 +157,33 @@
     "status": "Critical",
     "mitigation": "Fast-track critical path, add resources, negotiate deadline extension",
     "predictedDate": "2025-09-30",
-    "trend": "increasing"
+    "trend": "increasing",
+    "aiAnalysis": {
+      "patternMatch": "RP001",
+      "patternName": "Budget Overrun Pattern",
+      "confidence": 78,
+      "historicalSimilarity": 70,
+      "recommendedMitigation": {
+        "primary": "Scope freeze + critical path acceleration",
+        "successRate": 75,
+        "estimatedRecovery": "4-6 weeks",
+        "reasoning": "Combined approach addresses both timeline and scope issues simultaneously"
+      },
+      "alternativeMitigations": [
+        { "action": "Deadline negotiation", "successRate": 60 },
+        { "action": "Phased delivery", "successRate": 82 }
+      ],
+      "escalationProbability": 65,
+      "monteCarloOutcomes": {
+        "noAction": { "escalationProb": 88, "impactRange": "6-10 weeks delay" },
+        "withMitigation": { "escalationProb": 30, "impactRange": "2-4 weeks delay" }
+      },
+      "velocityAnalysis": {
+        "currentVelocity": "12% per month",
+        "requiredVelocity": "20% per month",
+        "gap": "8% - requires intervention"
+      }
+    }
   },
   {
     "id": "R006",
@@ -87,6 +198,28 @@
     "status": "Monitoring",
     "mitigation": "Develop adapter layer, engage legacy team early",
     "predictedDate": "2025-10-15",
-    "trend": "decreasing"
+    "trend": "decreasing",
+    "aiAnalysis": {
+      "patternMatch": "RP004",
+      "patternName": "Technical Debt Pattern",
+      "confidence": 72,
+      "historicalSimilarity": 65,
+      "recommendedMitigation": {
+        "primary": "Adapter layer pattern",
+        "successRate": 85,
+        "estimatedRecovery": "2 weeks",
+        "reasoning": "Lesson KB007 applied - API versioning prevents breaking changes"
+      },
+      "alternativeMitigations": [
+        { "action": "Direct integration refactor", "successRate": 55 },
+        { "action": "Middleware solution", "successRate": 78 }
+      ],
+      "escalationProbability": 15,
+      "monteCarloOutcomes": {
+        "noAction": { "escalationProb": 40, "impactRange": "$40K-$70K" },
+        "withMitigation": { "escalationProb": 10, "impactRange": "$10K-$25K" }
+      },
+      "lessonsApplied": ["KB007"]
+    }
   }
 ]

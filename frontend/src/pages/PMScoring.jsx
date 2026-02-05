@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, LineChart, Line } from 'recharts';
 import { Award, TrendingUp, TrendingDown, Users, Star, Target, Brain, Activity } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function PMScoring() {
   const [pmData, setPmData] = useState(null);
@@ -18,7 +18,7 @@ export default function PMScoring() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Analyze PM performance data and identify top performer strengths and areas for team-wide improvement' })
-    }).then(r => r.json()).then(data => setAiInsight(data.response?.split('\n')[0]));
+    }).then(r => r.json()).then(data => setAiInsight(data.response));
   }, []);
 
   if (!pmData) return <div style={{ padding: 40, textAlign: 'center' }}><Activity size={32} style={{ animation: 'spin 1s linear infinite' }} /> Loading PM data...</div>;
@@ -41,21 +41,6 @@ export default function PMScoring() {
         <h1>PM Performance Scoring</h1>
         <p>AI-driven objective performance metrics with multi-dimensional scoring</p>
       </div>
-
-      {/* AI Insight */}
-      {aiInsight && (
-        <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Brain size={24} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.8, marginBottom: 4, textTransform: 'uppercase' }}>AI Performance Insight</div>
-            <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>{aiInsight}</div>
-          </div>
-          <div style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.15)', borderRadius: 12, textAlign: 'center' }}>
-            <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{pmData.avgScore}</div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>Team Avg</div>
-          </div>
-        </div>
-      )}
 
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
@@ -203,6 +188,21 @@ export default function PMScoring() {
           )}
         </div>
       </div>
+
+      {/* AI Insight */}
+      {aiInsight && (
+        <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', borderRadius: 16, padding: '20px 24px', marginTop: 24, color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Brain size={24} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.8, marginBottom: 4, textTransform: 'uppercase' }}>AI Performance Insight</div>
+            <div style={{ fontSize: '0.9rem', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{aiInsight}</div>
+          </div>
+          <div style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.15)', borderRadius: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{pmData.avgScore}</div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>Team Avg</div>
+          </div>
+        </div>
+      )}
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>

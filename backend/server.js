@@ -1,9 +1,12 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import OpenAI from 'openai';
+import { createPSClient } from './projectServerClient.js';
+import { createDataService } from './dataService.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -18,89 +21,419 @@ if (process.env.OPENAI_API_KEY) {
   });
 }
 
-// Load mock data
-const loadData = (file) => JSON.parse(readFileSync(join(__dirname, 'data', file), 'utf-8'));
-
-// Get all project data for AI context
-const getProjectContext = () => {
-  const projects = loadData('projects.json');
-  const risks = loadData('risks.json');
-  const pms = loadData('projectManagers.json');
-  const objectives = loadData('strategicObjectives.json');
-  return { projects, risks, pms, objectives };
+// Initialize Project Server client
+const psConfig = {
+  baseUrl: process.env.PS_URL || 'http://34.29.110.174/pwa',
+  username: process.env.PS_USERNAME || 'info',
+  password: process.env.PS_PASSWORD || '',
+  domain: process.env.PS_DOMAIN || 'EPMTRIAL',
 };
 
+let psClient = null;
+const psEnabled = process.env.PS_ENABLED !== 'false' && !!psConfig.password;
+if (psEnabled) {
+  psClient = createPSClient(psConfig);
+  psClient.testConnection().then(ok => {
+    console.log(`Project Server: ${ok ? 'Connected to ' + psConfig.baseUrl : 'Unreachable (using mock data)'}`);
+  });
+}
+
+// PS Bridge Server URL (runs on the Project Server VM for CSOM operations)
+const PS_BRIDGE_URL = process.env.PS_BRIDGE_URL || 'http://34.29.110.174:8080';
+
+/**
+ * Call the PS Bridge Server on the VM for CSOM-based operations.
+ * This avoids the REST API queue blocking issue for resource assignments.
+ */
+async function callPSBridge(path, body = null, method = 'POST') {
+  const url = `${PS_BRIDGE_URL}${path}`;
+  const options = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body && method !== 'GET') {
+    options.body = JSON.stringify(body);
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+  options.signal = controller.signal;
+
+  try {
+    const response = await fetch(url, options);
+    clearTimeout(timeout);
+    if (!response.ok && response.status !== 200) {
+      const text = await response.text();
+      throw new Error(`Bridge responded ${response.status}: ${text.substring(0, 200)}`);
+    }
+    return await response.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      throw new Error('PS Bridge request timed out (120s)');
+    }
+    throw err;
+  }
+}
+
+const dataService = createDataService(psClient, {
+  cacheTTL: parseInt(process.env.PS_CACHE_TTL || '300') * 1000,
+  enabled: psEnabled,
+});
+
+// Load mock data (kept for local response generation functions)
+const loadData = (file) => JSON.parse(readFileSync(join(__dirname, 'data', file), 'utf-8'));
+
 // UC1: Projects & Schedule
-app.get('/api/projects', (req, res) => {
-  res.json(loadData('projects.json'));
+app.get('/api/projects', async (req, res) => {
+  try {
+    res.json(await dataService.getProjects());
+  } catch (error) {
+    console.error('Error fetching projects:', error.message);
+    res.json(loadData('projects.json'));
+  }
 });
 
-app.get('/api/projects/:id', (req, res) => {
-  const projects = loadData('projects.json');
-  const project = projects.find(p => p.id === req.params.id);
-  if (project) res.json(project);
-  else res.status(404).json({ error: 'Project not found' });
+app.get('/api/projects/:id', async (req, res) => {
+  try {
+    const project = await dataService.getProjectById(req.params.id);
+    if (project) res.json(project);
+    else res.status(404).json({ error: 'Project not found' });
+  } catch (error) {
+    console.error('Error fetching project:', error.message);
+    const projects = loadData('projects.json');
+    const project = projects.find(p => p.id === req.params.id);
+    if (project) res.json(project);
+    else res.status(404).json({ error: 'Project not found' });
+  }
 });
 
-// UC1: AI Chat with GPT-5.2
+// ─────────────────────────────────────────────────
+// OpenAI Function Calling Tools (for write-back actions)
+// ─────────────────────────────────────────────────
+const chatTools = [
+  {
+    type: 'function',
+    function: {
+      name: 'update_task_progress',
+      description: 'Update the progress percentage of a specific task in a project. Use when the user asks to update, change, set, or move task progress/completion.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: { type: 'string', description: 'The project name (e.g. "Customer Portal")' },
+          taskName: { type: 'string', description: 'The task name (e.g. "Payment Integration")' },
+          percentComplete: { type: 'number', description: 'The new completion percentage (0-100)' },
+        },
+        required: ['projectName', 'taskName', 'percentComplete'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'assign_resource',
+      description: 'Assign a project manager (resource) to a task in a project. Use when the user asks to assign, add, or move a PM/resource to a task.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: { type: 'string', description: 'The project name (e.g. "Customer Portal")' },
+          taskName: { type: 'string', description: 'The task name (e.g. "Security Testing")' },
+          resourceName: { type: 'string', description: 'The PM/resource name (e.g. "Mohammed Ali")' },
+        },
+        required: ['projectName', 'taskName', 'resourceName'],
+      },
+    },
+  },
+];
+
+// Build compact task reference for system prompt (project → tasks mapping)
+function buildTaskReference(projects) {
+  return projects.map(p => {
+    const taskList = (p.tasks || []).map(t => `  - "${t.name}" (${t.progress}% complete)`).join('\n');
+    return `"${p.name}" (PM: ${p.pmName}, Health: ${p.health.toUpperCase()}, Progress: ${p.progress}%)\n${taskList || '  (no task data)'}`;
+  }).join('\n\n');
+}
+
+// UC1: AI Chat (with function calling for write-back)
 app.post('/api/chat', async (req, res) => {
   const { message } = req.body;
-  const context = getProjectContext();
+  let context;
+  try {
+    context = await dataService.getProjectContext();
+  } catch {
+    context = { projects: loadData('projects.json'), risks: loadData('risks.json'), pms: loadData('projectManagers.json'), objectives: loadData('strategicObjectives.json') };
+  }
 
-  // If no OpenAI key, use local response
+  // If no OpenAI key, use local response with intent detection
   if (!openai) {
+    const localAction = detectLocalAction(message, context);
+    if (localAction) {
+      res.json({
+        response: localAction.response,
+        action: localAction.action,
+        timestamp: new Date().toISOString(),
+        source: 'local'
+      });
+      return;
+    }
     const response = generateLocalResponse(message, context);
     res.json({ response, timestamp: new Date().toISOString(), source: 'local' });
     return;
   }
 
   try {
-    const systemPrompt = `You are an AI Project Management Assistant for an EPM (Enterprise Project Management) system. You have access to the following real-time data:
+    const taskReference = buildTaskReference(context.projects);
+    const resourceNames = context.pms.map(pm => pm.name).join(', ');
 
-PROJECTS:
-${JSON.stringify(context.projects, null, 2)}
+    const systemPrompt = `You are BAYAN (بيان), an elite AI PMO Director for an Enterprise Project Management system connected LIVE to Microsoft Project Server. Your name means "clarity" in Arabic — your purpose is to bring clarity to complex portfolios.
+
+PERSONALITY:
+- You speak like a senior PMO director with 20 years of experience — confident, decisive, data-driven
+- You are bilingual: respond in the SAME language the user writes in (Arabic or English)
+- When speaking Arabic, use professional formal Arabic (فصحى) but keep it natural, not overly academic
+- You don't just report problems — you diagnose root causes and prescribe specific actions
+- You refer to yourself as "Bayan" naturally: "Based on what I see in the portfolio..." or "بناءً على تحليلي للمحفظة..."
+- You are PROACTIVE: when you identify a risk or problem, ALWAYS suggest a concrete action the user can take, and if that action is an update or assignment, call the appropriate function
+- You care about Vision 2030 alignment and digital transformation maturity
+
+LIVE DATA (from Microsoft Project Server):
+
+PROJECTS & TASKS:
+${taskReference}
+
+AVAILABLE RESOURCES (PMs):
+${resourceNames}
 
 RISKS:
 ${JSON.stringify(context.risks, null, 2)}
 
-PROJECT MANAGERS:
+PROJECT MANAGERS (with scores):
 ${JSON.stringify(context.pms, null, 2)}
 
 STRATEGIC OBJECTIVES:
 ${JSON.stringify(context.objectives, null, 2)}
 
-IMPORTANT FORMATTING RULES:
-- Do NOT use markdown formatting (no **, no ##, no ###)
+AVAILABLE ACTIONS:
+You can execute these actions by calling the appropriate function:
+1. update_task_progress — Update a task's completion percentage in Project Server
+2. assign_resource — Assign a PM/resource to a task in Project Server
+
+CRITICAL BEHAVIOR — PROACTIVE ACTIONS:
+- When analyzing risks or problems, if the solution involves updating progress or reassigning resources, PROACTIVELY call the function to propose the action
+- Example: if user asks "what's wrong with Customer Portal?" and you see it needs help, suggest assigning a resource AND call assign_resource to propose it
+- Always match names EXACTLY from the data above
+- When proposing actions, explain WHY this action will help before executing
+
+PAGE CONTEXT AWARENESS:
+- The user's message may start with [Page Context: ...] indicating which page they are viewing
+- When you see this context, tailor your response to be relevant to that specific page/dashboard
+- For example, if they're on the Risk Center, focus on risks; if on PM Scoring, focus on PM performance
+- If no page context is given, respond normally as a general PMO assistant
+
+FORMATTING RULES:
+- Do NOT use markdown formatting (no **, no ##, no ###, no *)
 - Use plain text only
 - Use bullet points with "•" character for lists
 - Use "-" for sub-items
 - Use ALL CAPS for emphasis instead of bold
-- Keep responses concise and professional
+- Keep responses concise and professional (max 200 words for general queries)
 - Include specific numbers, percentages, and names from the data
-- Provide actionable insights`;
+- End analytical responses with a clear recommended next step`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-5.2',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
-      max_tokens: 500,
+      tools: chatTools,
+      tool_choice: 'auto',
+      max_completion_tokens: 500,
       temperature: 0.7
     });
 
-    res.json({
-      response: completion.choices[0].message.content,
-      timestamp: new Date().toISOString(),
-      source: 'openai'
-    });
+    const choice = completion.choices[0];
+
+    // Check if GPT wants to call a function (write-back action)
+    if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls?.length > 0) {
+      const toolCall = choice.message.tool_calls[0];
+      const args = JSON.parse(toolCall.function.arguments);
+      const actionType = toolCall.function.name;
+
+      // Return the proposed action for frontend confirmation
+      res.json({
+        response: choice.message.content || `I'll ${actionType === 'update_task_progress' ? `update "${args.taskName}" in "${args.projectName}" to ${args.percentComplete}% complete` : `assign ${args.resourceName} to "${args.taskName}" in "${args.projectName}"`}. Please confirm this action.`,
+        action: {
+          type: actionType,
+          params: args,
+          description: actionType === 'update_task_progress'
+            ? `Update "${args.taskName}" in "${args.projectName}" to ${args.percentComplete}% complete`
+            : `Assign ${args.resourceName} to "${args.taskName}" in "${args.projectName}"`,
+        },
+        timestamp: new Date().toISOString(),
+        source: 'openai'
+      });
+    } else {
+      // Normal text response
+      res.json({
+        response: choice.message.content,
+        timestamp: new Date().toISOString(),
+        source: 'openai'
+      });
+    }
   } catch (error) {
     console.error('OpenAI Error:', error);
-    // Fallback to smart local response
     const response = generateLocalResponse(message, context);
     res.json({ response, timestamp: new Date().toISOString(), source: 'local' });
   }
 });
+
+// UC1: Execute confirmed write-back action from AI Chat
+app.post('/api/chat/execute', async (req, res) => {
+  const { type, params } = req.body;
+
+  if (!type || !params) {
+    return res.status(400).json({ error: 'Missing action type or params' });
+  }
+
+  try {
+    if (type === 'update_task_progress') {
+      const { projectName, taskName, percentComplete } = params;
+
+      // Look up project and task IDs from live data
+      const projects = await dataService.getProjects();
+      const project = projects.find(p => p.name === projectName);
+      if (!project) return res.status(404).json({ error: `Project "${projectName}" not found` });
+
+      const task = (project.tasks || []).find(t => t.name === taskName);
+      if (!task) return res.status(404).json({ error: `Task "${taskName}" not found in "${projectName}"` });
+
+      if (!psClient) return res.status(503).json({ error: 'Project Server not configured' });
+
+      const digest = await psClient.checkoutProject(project.psId);
+      await psClient.updateTask(project.psId, task.id, { PercentComplete: percentComplete }, digest);
+      await psClient.publishProject(project.psId);
+      dataService.invalidateCache('projects');
+
+      res.json({
+        success: true,
+        message: `Updated "${taskName}" in "${projectName}" to ${percentComplete}% complete`,
+        details: { projectName, taskName, percentComplete },
+      });
+
+    } else if (type === 'assign_resource') {
+      const { projectName, taskName, resourceName } = params;
+
+      // Use CSOM bridge for resource assignment
+      try {
+        const bridgeResult = await callPSBridge('/api/assign', {
+          projectName,
+          assignments: [{ resourceName, taskName }],
+        });
+
+        if (bridgeResult && bridgeResult.success) {
+          dataService.invalidateCache('projects');
+          res.json({
+            success: true,
+            message: `Assigned ${resourceName} to "${taskName}" in "${projectName}"`,
+            details: { projectName, taskName, resourceName },
+            method: 'csom-bridge',
+          });
+        } else {
+          res.status(500).json({ error: bridgeResult?.message || 'Bridge assignment failed' });
+        }
+      } catch (bridgeErr) {
+        res.status(500).json({ error: `Bridge error: ${bridgeErr.message}` });
+      }
+
+    } else {
+      res.status(400).json({ error: `Unknown action type: ${type}` });
+    }
+  } catch (error) {
+    console.error('Action execution error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Local intent detection for write-back actions (fallback when no OpenAI key)
+function detectLocalAction(message, context) {
+  const lower = message.toLowerCase();
+
+  // Detect task progress update: "update X to Y%"
+  const progressMatch = message.match(/(?:update|set|change|move)\s+(?:the\s+)?(.+?)\s+(?:in\s+|on\s+)?(.+?)\s+(?:to|=)\s*(\d+)\s*%/i)
+    || message.match(/(?:update|set|change|move)\s+(?:the\s+)?(.+?)\s+(?:to|=)\s*(\d+)\s*%/i);
+
+  if (progressMatch) {
+    let taskName, projectName, percent;
+
+    if (progressMatch.length === 4) {
+      // 3-group match: task, project, percent
+      taskName = progressMatch[1].trim();
+      projectName = progressMatch[2].trim();
+      percent = parseInt(progressMatch[3]);
+    } else {
+      // 2-group match: task, percent — infer project
+      taskName = progressMatch[1].trim();
+      percent = parseInt(progressMatch[2]);
+    }
+
+    // Fuzzy match task and project from context
+    for (const p of context.projects) {
+      for (const t of p.tasks || []) {
+        if (t.name.toLowerCase().includes(taskName.toLowerCase()) ||
+            taskName.toLowerCase().includes(t.name.toLowerCase())) {
+          if (!projectName || p.name.toLowerCase().includes(projectName.toLowerCase()) ||
+              projectName.toLowerCase().includes(p.name.toLowerCase())) {
+            return {
+              response: `I'll update "${t.name}" in "${p.name}" to ${percent}% complete. Please confirm this action.`,
+              action: {
+                type: 'update_task_progress',
+                params: { projectName: p.name, taskName: t.name, percentComplete: percent },
+                description: `Update "${t.name}" in "${p.name}" to ${percent}% complete`,
+              },
+            };
+          }
+        }
+      }
+    }
+  }
+
+  // Detect resource assignment: "assign X to Y"
+  const assignMatch = message.match(/(?:assign|add|move)\s+(.+?)\s+to\s+(?:the\s+)?(.+?)(?:\s+(?:in|on|for)\s+(.+))?$/i);
+
+  if (assignMatch && (lower.includes('assign') || lower.includes('resource'))) {
+    const resourceCandidate = assignMatch[1].trim();
+    const taskCandidate = assignMatch[2].trim();
+    const projectCandidate = assignMatch[3]?.trim();
+
+    // Match resource name
+    const resource = context.pms.find(pm =>
+      pm.name.toLowerCase().includes(resourceCandidate.toLowerCase()) ||
+      resourceCandidate.toLowerCase().includes(pm.name.toLowerCase())
+    );
+
+    if (resource) {
+      for (const p of context.projects) {
+        if (projectCandidate && !p.name.toLowerCase().includes(projectCandidate.toLowerCase())) continue;
+        for (const t of p.tasks || []) {
+          if (t.name.toLowerCase().includes(taskCandidate.toLowerCase()) ||
+              taskCandidate.toLowerCase().includes(t.name.toLowerCase())) {
+            return {
+              response: `I'll assign ${resource.name} to "${t.name}" in "${p.name}". Please confirm this action.`,
+              action: {
+                type: 'assign_resource',
+                params: { projectName: p.name, taskName: t.name, resourceName: resource.name },
+                description: `Assign ${resource.name} to "${t.name}" in "${p.name}"`,
+              },
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return null; // No action detected
+}
 
 // Smart local fallback
 function generateLocalResponse(message, context) {
@@ -242,69 +575,89 @@ What would you like to know?`;
 }
 
 // UC2: Portfolio Dashboard
-app.get('/api/portfolio', (req, res) => {
-  const projects = loadData('projects.json');
-  const objectives = loadData('strategicObjectives.json');
-  
-  res.json({
-    totalProjects: projects.length,
-    totalBudget: projects.reduce((sum, p) => sum + p.budget, 0),
-    totalSpent: projects.reduce((sum, p) => sum + p.spent, 0),
-    healthBreakdown: {
-      green: projects.filter(p => p.health === 'green').length,
-      yellow: projects.filter(p => p.health === 'yellow').length,
-      red: projects.filter(p => p.health === 'red').length
-    },
-    avgProgress: Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length),
-    strategicObjectives: objectives.length,
-    projects,
-    objectives
-  });
+app.get('/api/portfolio', async (req, res) => {
+  try {
+    res.json(await dataService.getPortfolio());
+  } catch (error) {
+    console.error('Error fetching portfolio:', error.message);
+    const projects = loadData('projects.json');
+    const objectives = loadData('strategicObjectives.json');
+    res.json({
+      totalProjects: projects.length,
+      totalBudget: projects.reduce((sum, p) => sum + p.budget, 0),
+      totalSpent: projects.reduce((sum, p) => sum + p.spent, 0),
+      healthBreakdown: {
+        green: projects.filter(p => p.health === 'green').length,
+        yellow: projects.filter(p => p.health === 'yellow').length,
+        red: projects.filter(p => p.health === 'red').length,
+      },
+      avgProgress: Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length),
+      strategicObjectives: objectives.length,
+      projects,
+      objectives,
+    });
+  }
 });
 
 // UC3: Strategy & ROI
-app.get('/api/strategy', (req, res) => {
-  const objectives = loadData('strategicObjectives.json');
-  const projects = loadData('projects.json');
-  
-  res.json({
-    objectives: objectives.map(obj => ({
-      ...obj,
-      projectDetails: projects.filter(p => obj.projects.includes(p.id))
-    })),
-    overallROI: Math.round(projects.reduce((sum, p) => sum + p.roi, 0) / projects.length),
-    alignmentScore: Math.round(projects.reduce((sum, p) => sum + p.alignmentScore, 0) / projects.length)
-  });
+app.get('/api/strategy', async (req, res) => {
+  try {
+    res.json(await dataService.getStrategy());
+  } catch (error) {
+    console.error('Error fetching strategy:', error.message);
+    const objectives = loadData('strategicObjectives.json');
+    const projects = loadData('projects.json');
+    res.json({
+      objectives: objectives.map(obj => ({
+        ...obj,
+        projectDetails: projects.filter(p => obj.projects.includes(p.id)),
+      })),
+      overallROI: Math.round(projects.reduce((sum, p) => sum + p.roi, 0) / projects.length),
+      alignmentScore: Math.round(projects.reduce((sum, p) => sum + p.alignmentScore, 0) / projects.length),
+    });
+  }
 });
 
 // UC6: Risk Management
-app.get('/api/risks', (req, res) => {
-  const risks = loadData('risks.json');
-  res.json({
-    risks,
-    summary: {
-      total: risks.length,
-      critical: risks.filter(r => r.status === 'Critical').length,
-      open: risks.filter(r => r.status === 'Open').length,
-      monitoring: risks.filter(r => r.status === 'Monitoring').length,
-      avgScore: Math.round(risks.reduce((sum, r) => sum + r.score, 0) / risks.length)
-    },
-    byCategory: {
-      Resource: risks.filter(r => r.category === 'Resource').length,
-      Scope: risks.filter(r => r.category === 'Scope').length,
-      Financial: risks.filter(r => r.category === 'Financial').length,
-      Technical: risks.filter(r => r.category === 'Technical').length,
-      Schedule: risks.filter(r => r.category === 'Schedule').length
-    }
-  });
+app.get('/api/risks', async (req, res) => {
+  try {
+    res.json(await dataService.getRisksWithSummary());
+  } catch (error) {
+    console.error('Error fetching risks:', error.message);
+    const risks = loadData('risks.json');
+    res.json({
+      risks,
+      summary: {
+        total: risks.length,
+        critical: risks.filter(r => r.status === 'Critical').length,
+        open: risks.filter(r => r.status === 'Open').length,
+        monitoring: risks.filter(r => r.status === 'Monitoring').length,
+        avgScore: Math.round(risks.reduce((sum, r) => sum + r.score, 0) / risks.length),
+      },
+      byCategory: {
+        Resource: risks.filter(r => r.category === 'Resource').length,
+        Scope: risks.filter(r => r.category === 'Scope').length,
+        Financial: risks.filter(r => r.category === 'Financial').length,
+        Technical: risks.filter(r => r.category === 'Technical').length,
+        Schedule: risks.filter(r => r.category === 'Schedule').length,
+      },
+    });
+  }
 });
 
-// UC7: AI Document Generation with GPT-4o
+// UC7: AI Document Generation with GPT-5.2
 app.post('/api/documents/generate', async (req, res) => {
   const { type, projectId } = req.body;
-  const projects = loadData('projects.json');
-  const project = projects.find(p => p.id === projectId) || projects[0];
-  const risks = loadData('risks.json').filter(r => r.projectId === projectId);
+  let projects, project, risks;
+  try {
+    projects = await dataService.getProjects();
+    project = projects.find(p => p.id === projectId) || projects[0];
+    risks = dataService.getRisks().filter(r => r.projectId === projectId);
+  } catch {
+    projects = loadData('projects.json');
+    project = projects.find(p => p.id === projectId) || projects[0];
+    risks = loadData('risks.json').filter(r => r.projectId === projectId);
+  }
 
   // If no OpenAI key, use local document generation
   if (!openai) {
@@ -342,12 +695,12 @@ Format with clear headings.`
     };
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-5.2',
       messages: [
-        { role: 'system', content: 'You are a professional technical writer creating project management documents. Be concise, professional, and actionable.' },
+        { role: 'system', content: 'You are a professional technical writer creating project management documents. Be concise, professional, and actionable. IMPORTANT: Do NOT use markdown formatting like ** or ## - use plain text only. Use bullet points with "•" or "-" for lists.' },
         { role: 'user', content: prompts[type] || prompts['status-report'] }
       ],
-      max_tokens: 800,
+      max_completion_tokens: 800,
       temperature: 0.7
     });
 
@@ -422,48 +775,41 @@ function generateLocalDocument(type, project, risks) {
 }
 
 // UC9: PM Scoring
-app.get('/api/pm-scores', (req, res) => {
-  const pms = loadData('projectManagers.json');
-  res.json({
-    projectManagers: pms.sort((a, b) => b.overallScore - a.overallScore),
-    metrics: ['delivery', 'budget', 'riskResolution', 'stakeholderSatisfaction', 'documentation'],
-    avgScore: Math.round(pms.reduce((sum, pm) => sum + pm.overallScore, 0) / pms.length),
-    topPerformer: pms.reduce((top, pm) => pm.overallScore > top.overallScore ? pm : top, pms[0]),
-    needsSupport: pms.filter(pm => pm.overallScore < 75 || pm.trend === 'down')
-  });
+app.get('/api/pm-scores', async (req, res) => {
+  try {
+    res.json(await dataService.getPMScores());
+  } catch (error) {
+    console.error('Error fetching PM scores:', error.message);
+    const pms = loadData('projectManagers.json');
+    res.json({
+      projectManagers: pms.sort((a, b) => b.overallScore - a.overallScore),
+      metrics: ['delivery', 'budget', 'riskResolution', 'stakeholderSatisfaction', 'documentation'],
+      avgScore: Math.round(pms.reduce((sum, pm) => sum + pm.overallScore, 0) / pms.length),
+      topPerformer: pms.reduce((top, pm) => pm.overallScore > top.overallScore ? pm : top, pms[0]),
+      needsSupport: pms.filter(pm => pm.overallScore < 75 || pm.trend === 'down'),
+    });
+  }
 });
 
 // Alerts endpoint
-app.get('/api/alerts', (req, res) => {
-  const projects = loadData('projects.json');
-  const risks = loadData('risks.json');
-  const pms = loadData('projectManagers.json');
-  
-  const alerts = [];
-  
-  projects.filter(p => p.health === 'red').forEach(p => {
-    alerts.push({ type: 'critical', category: 'project', message: `${p.name} is at risk`, projectId: p.id });
-  });
-  
-  risks.filter(r => r.status === 'Critical').forEach(r => {
-    alerts.push({ type: 'critical', category: 'risk', message: `Critical risk: ${r.title}`, projectId: r.projectId });
-  });
-  
-  pms.filter(pm => pm.workload > 80).forEach(pm => {
-    alerts.push({ type: 'warning', category: 'resource', message: `${pm.name} is overloaded (${pm.workload}%)`, pmId: pm.id });
-  });
-  
-  projects.filter(p => (p.spent / p.budget) > 0.8 && p.progress < 70).forEach(p => {
-    alerts.push({ type: 'warning', category: 'budget', message: `${p.name} budget concern: ${Math.round(p.spent/p.budget*100)}% spent, ${p.progress}% complete`, projectId: p.id });
-  });
-  
-  res.json(alerts);
+app.get('/api/alerts', async (req, res) => {
+  try {
+    res.json(await dataService.getAlerts());
+  } catch (error) {
+    console.error('Error fetching alerts:', error.message);
+    res.json([]);
+  }
 });
 
 // AI Analysis endpoint for various UCs
 app.post('/api/ai/analyze', async (req, res) => {
   const { type, data } = req.body;
-  const context = getProjectContext();
+  let context;
+  try {
+    context = await dataService.getProjectContext();
+  } catch {
+    context = { projects: loadData('projects.json'), risks: loadData('risks.json'), pms: loadData('projectManagers.json'), objectives: loadData('strategicObjectives.json') };
+  }
 
   const prompts = {
     'risk-prediction': `Analyze these project risks and provide predictions:
@@ -488,12 +834,12 @@ Provide: 1) Alignment gaps, 2) Reprioritization recommendations, 3) ROI optimiza
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-5.2',
       messages: [
         { role: 'system', content: 'You are an AI analyst for enterprise project management. Provide data-driven insights and actionable recommendations.' },
         { role: 'user', content: prompts[type] || 'Analyze the project portfolio and provide insights.' }
       ],
-      max_tokens: 600,
+      max_completion_tokens: 600,
       temperature: 0.7
     });
     
@@ -577,8 +923,163 @@ ${highROI.slice(0, 3).map(p => `  - ${p.name}: ${p.roi}% ROI`).join('\n')}
   return 'Analysis complete. Review dashboard for detailed metrics.';
 }
 
+// ─────────────────────────────────────────────────
+// Project Server Integration Endpoints
+// ─────────────────────────────────────────────────
+
+// PS Status
+app.get('/api/ps/status', async (req, res) => {
+  const status = dataService.getStatus();
+  let connected = false;
+  if (psClient) {
+    try { connected = await psClient.testConnection(); } catch { connected = false; }
+  }
+  res.json({ ...status, connected, serverUrl: psConfig.baseUrl });
+});
+
+// PS Cache Invalidation
+app.post('/api/ps/cache/invalidate', (req, res) => {
+  dataService.invalidateCache(req.body.key || null);
+  res.json({ success: true, message: req.body.key ? `Cache key '${req.body.key}' invalidated` : 'All cache cleared' });
+});
+
+// Write-back: Update task progress/cost
+app.post('/api/ps/tasks/:projectId/:taskId/update', async (req, res) => {
+  if (!psClient) return res.status(503).json({ error: 'Project Server not configured' });
+
+  const { projectId, taskId } = req.params;
+  const { percentComplete, fixedCost } = req.body;
+
+  try {
+    const updates = {};
+    if (percentComplete !== undefined) updates.PercentComplete = percentComplete;
+    if (fixedCost !== undefined) updates.FixedCost = fixedCost;
+
+    const digest = await psClient.checkoutProject(projectId);
+    await psClient.updateTask(projectId, taskId, updates, digest);
+    await psClient.publishProject(projectId);
+    dataService.invalidateCache('projects');
+
+    res.json({ success: true, message: 'Task updated and published' });
+  } catch (error) {
+    console.error('PS write-back error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Write-back: Update project schedule
+app.post('/api/ps/projects/:projectId/schedule', async (req, res) => {
+  if (!psClient) return res.status(503).json({ error: 'Project Server not configured' });
+
+  const { projectId } = req.params;
+  const { finishDate } = req.body;
+
+  try {
+    const digest = await psClient.checkoutProject(projectId);
+    await psClient.updateProjectDraft(projectId, { FinishDate: finishDate }, digest);
+    await psClient.publishProject(projectId);
+    dataService.invalidateCache('projects');
+
+    res.json({ success: true, message: 'Schedule updated and published' });
+  } catch (error) {
+    console.error('PS schedule update error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Write-back: Assign resource to task
+// Routes through the PS Bridge Server (CSOM) on the VM to avoid queue blocking.
+// Falls back to REST API if bridge is unavailable.
+app.post('/api/ps/projects/:projectId/resources', async (req, res) => {
+  if (!psClient) return res.status(503).json({ error: 'Project Server not configured' });
+
+  const { projectId } = req.params;
+  const { resourceId, taskId, resourceName, taskName, projectName } = req.body;
+
+  // If we have names, try the CSOM bridge first (no queue blocking)
+  if (resourceName && taskName && projectName) {
+    try {
+      const bridgeResult = await callPSBridge('/api/assign', {
+        projectName,
+        assignments: [{ resourceName, taskName }],
+      });
+      if (bridgeResult && bridgeResult.success) {
+        dataService.invalidateCache('projects');
+        return res.json({
+          success: true,
+          message: `Resource assigned via CSOM: ${bridgeResult.message}`,
+          method: 'csom-bridge',
+          details: bridgeResult.data,
+        });
+      }
+      // If bridge returned but not success, log and fall through
+      console.warn('PS Bridge returned failure:', bridgeResult?.message);
+    } catch (bridgeErr) {
+      console.warn('PS Bridge unavailable, falling back to REST API:', bridgeErr.message);
+    }
+  }
+
+  // Fallback: direct REST API (may hit queue blocking)
+  try {
+    const digest = await psClient.checkoutProject(projectId);
+    await psClient.addTaskAssignment(projectId, taskId, resourceId, digest);
+    await psClient.publishProject(projectId);
+    dataService.invalidateCache('projects');
+
+    res.json({ success: true, message: 'Resource assigned and published', method: 'rest-api' });
+  } catch (error) {
+    console.error('PS resource assignment error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Bulk assign resources via CSOM bridge
+app.post('/api/ps/assign-all', async (req, res) => {
+  const { projectAssignments } = req.body;
+
+  if (!projectAssignments || typeof projectAssignments !== 'object') {
+    return res.status(400).json({
+      error: 'projectAssignments object required: { "Project Name": [{ resourceName, taskName }] }',
+    });
+  }
+
+  try {
+    const bridgeResult = await callPSBridge('/api/assign-all', { projectAssignments });
+    dataService.invalidateCache('projects');
+    res.json(bridgeResult);
+  } catch (err) {
+    console.error('Bulk assign error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PS Bridge health check
+app.get('/api/ps/bridge/health', async (req, res) => {
+  try {
+    const result = await callPSBridge('/health', null, 'GET');
+    res.json({ available: true, ...result });
+  } catch (err) {
+    res.json({ available: false, error: err.message });
+  }
+});
+
+// PS Enterprise Resources list (for UI dropdowns)
+app.get('/api/ps/resources', async (req, res) => {
+  if (!psClient) return res.status(503).json({ error: 'Project Server not configured' });
+
+  try {
+    const resources = await psClient.getEnterpriseResources();
+    res.json(resources.map(r => ({ id: r.Id, name: r.Name })));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`EPM-AI Backend running on http://localhost:${PORT}`);
   console.log(`OpenAI integration: ${process.env.OPENAI_API_KEY ? 'Enabled' : 'Disabled (using fallback)'}`);
+  console.log(`Project Server: ${psEnabled ? psConfig.baseUrl : 'Disabled (set PS_PASSWORD to enable)'}`);
 });

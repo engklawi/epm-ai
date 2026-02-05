@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
 import { Award, TrendingUp, AlertTriangle, BookOpen, Target, Heart, Brain, GraduationCap, Users, Zap, Activity } from 'lucide-react';
 
-const API = 'https://epm-ai-demo-20260201.uc.r.appspot.com/api';
+const API = 'http://localhost:3001/api';
 
 export default function PMDevelopment() {
   const [pmData, setPmData] = useState(null);
@@ -14,7 +14,7 @@ export default function PMDevelopment() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Analyze PM team and recommend top 2 development priorities with specific training suggestions' })
-    }).then(r => r.json()).then(data => setAiInsight(data.response?.split('\n').slice(0, 3).join(' ')));
+    }).then(r => r.json()).then(data => setAiInsight(data.response));
   }, []);
 
   if (!pmData) return <div style={{ padding: 40, textAlign: 'center' }}><Activity size={32} style={{ animation: 'spin 1s linear infinite' }} /> Loading...</div>;
@@ -50,19 +50,6 @@ export default function PMDevelopment() {
         <p>AI-powered career development, training recommendations, and retention insights</p>
       </div>
 
-      {/* AI Development Insight */}
-      {aiInsight && (
-        <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <GraduationCap size={24} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.85, marginBottom: 4, textTransform: 'uppercase' }}>AI Development Priorities</div>
-            <div style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{aiInsight}</div>
-          </div>
-        </div>
-      )}
-
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
@@ -85,7 +72,7 @@ export default function PMDevelopment() {
         {/* Leaderboard with Career Path */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
           <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Award size={18} color: '#fbbf24' /> Rankings & Career Path
+            <Award size={18} color="#fbbf24" /> Rankings & Career Path
           </h3>
           {pmData.projectManagers.map((pm, i) => {
             const careerPath = careerPaths.find(c => c.pm === pm.name);
@@ -176,7 +163,7 @@ export default function PMDevelopment() {
       </div>
 
       {/* Mentorship Pairings */}
-      <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+      <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 24 }}>
         <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Zap size={18} color="#f59e0b" /> AI-Suggested Mentorship Pairings
         </h3>
@@ -200,6 +187,19 @@ export default function PMDevelopment() {
           ))}
         </div>
       </div>
+
+      {/* AI Development Insight */}
+      {aiInsight && (
+        <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: 16, padding: '20px 24px', color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <GraduationCap size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.85, marginBottom: 4, textTransform: 'uppercase' }}>AI Development Priorities</div>
+            <div style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{aiInsight}</div>
+          </div>
+        </div>
+      )}
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>

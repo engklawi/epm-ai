@@ -15,7 +15,40 @@
     "alignmentScore": 92,
     "roi": 145,
     "risks": ["Resource shortage", "Scope creep"],
-    "riskScore": 68
+    "riskScore": 68,
+    "aiInsights": {
+      "optimizedSchedule": {
+        "suggestedEndDate": "2026-05-15",
+        "timelineSavings": "6 weeks",
+        "confidence": 78,
+        "reasoning": "Parallel workstream execution and resource rebalancing can accelerate delivery"
+      },
+      "suggestedReallocation": [
+        { "action": "Add", "resource": "Senior Developer", "from": "Cloud Migration", "hours": 20, "impact": "+8% velocity" },
+        { "action": "Remove", "resource": "Junior QA", "to": "Mobile App Revamp", "hours": 15, "impact": "Minimal - automated testing covers" }
+      ],
+      "projectedROI": {
+        "conservative": 125,
+        "expected": 145,
+        "optimistic": 175,
+        "confidence": 82
+      },
+      "recommendedMethodology": {
+        "current": "Hybrid",
+        "suggested": "Agile",
+        "reasoning": "High change frequency (12 CRs in 3 months) suggests Agile would reduce overhead by 20%",
+        "transitionEffort": "Medium"
+      },
+      "predictedCompletion": {
+        "onTimeProb": 65,
+        "delay1MonthProb": 25,
+        "delay3MonthProb": 10
+      }
+    },
+    "lessonsLearned": [
+      { "id": "LL001", "lesson": "Early vendor engagement reduced integration issues by 40%", "category": "Integration", "applicable": true },
+      { "id": "LL002", "lesson": "Weekly stakeholder demos prevented 3 major scope changes", "category": "Stakeholder", "applicable": true }
+    ]
   },
   {
     "id": "P002",
@@ -33,7 +66,39 @@
     "alignmentScore": 88,
     "roi": 210,
     "risks": ["Vendor dependency"],
-    "riskScore": 35
+    "riskScore": 35,
+    "aiInsights": {
+      "optimizedSchedule": {
+        "suggestedEndDate": "2025-11-30",
+        "timelineSavings": "4 weeks",
+        "confidence": 85,
+        "reasoning": "Current velocity supports early completion; recommend accelerating for Q4 cost savings"
+      },
+      "suggestedReallocation": [
+        { "action": "Lend", "resource": "DevOps Engineer", "to": "Customer Portal", "hours": 10, "impact": "Can spare - automation complete" }
+      ],
+      "projectedROI": {
+        "conservative": 185,
+        "expected": 210,
+        "optimistic": 245,
+        "confidence": 88
+      },
+      "recommendedMethodology": {
+        "current": "Agile",
+        "suggested": "Agile",
+        "reasoning": "Current methodology optimal for cloud workloads",
+        "transitionEffort": "None"
+      },
+      "predictedCompletion": {
+        "onTimeProb": 88,
+        "delay1MonthProb": 10,
+        "delay3MonthProb": 2
+      }
+    },
+    "lessonsLearned": [
+      { "id": "LL003", "lesson": "Multi-cloud strategy added 15% overhead - single vendor recommended for similar scope", "category": "Architecture", "applicable": false },
+      { "id": "LL004", "lesson": "Automated testing suite reduced regression bugs by 60%", "category": "Quality", "applicable": true }
+    ]
   },
   {
     "id": "P003",
@@ -51,7 +116,47 @@
     "alignmentScore": 95,
     "roi": 180,
     "risks": ["Budget overrun", "Technical debt", "Timeline delay"],
-    "riskScore": 85
+    "riskScore": 85,
+    "aiInsights": {
+      "optimizedSchedule": {
+        "suggestedEndDate": "2025-11-15",
+        "timelineSavings": "-6 weeks (extension recommended)",
+        "confidence": 72,
+        "reasoning": "Current velocity of 12% monthly cannot meet September deadline; realistic completion November"
+      },
+      "suggestedReallocation": [
+        { "action": "Add", "resource": "Senior Developer", "from": "Cloud Migration", "hours": 30, "impact": "+15% velocity" },
+        { "action": "Add", "resource": "Tech Lead", "from": "External Hire", "hours": 40, "impact": "Reduce technical debt" },
+        { "action": "Reassign PM", "resource": "Mohammed Ali", "role": "Co-PM/Mentor", "hours": 10, "impact": "Experience transfer" }
+      ],
+      "projectedROI": {
+        "conservative": 120,
+        "expected": 150,
+        "optimistic": 180,
+        "confidence": 55
+      },
+      "recommendedMethodology": {
+        "current": "Waterfall",
+        "suggested": "Agile",
+        "reasoning": "Frequent requirement changes (18 CRs) indicate Waterfall is causing 35% rework; Agile recommended",
+        "transitionEffort": "High"
+      },
+      "predictedCompletion": {
+        "onTimeProb": 15,
+        "delay1MonthProb": 35,
+        "delay3MonthProb": 50
+      },
+      "continuationAnalysis": {
+        "continueROI": 150,
+        "cancelCost": 750000,
+        "pivotOption": "Reduce scope to MVP, deliver core features by deadline",
+        "recommendation": "Continue with scope reduction",
+        "confidence": 68
+      }
+    },
+    "lessonsLearned": [
+      { "id": "LL005", "lesson": "Legacy integration requires 2x estimated time - always add buffer", "category": "Estimation", "applicable": true }
+    ]
   },
   {
     "id": "P004",
@@ -69,7 +174,42 @@
     "alignmentScore": 98,
     "roi": 320,
     "risks": ["Data quality"],
-    "riskScore": 25
+    "riskScore": 25,
+    "aiInsights": {
+      "optimizedSchedule": {
+        "suggestedEndDate": "2026-02-15",
+        "timelineSavings": "6 weeks",
+        "confidence": 80,
+        "reasoning": "Strong execution velocity; recommend acceleration for earlier business value realization"
+      },
+      "suggestedReallocation": [],
+      "projectedROI": {
+        "conservative": 280,
+        "expected": 320,
+        "optimistic": 385,
+        "confidence": 85
+      },
+      "recommendedMethodology": {
+        "current": "Agile",
+        "suggested": "Agile",
+        "reasoning": "Current methodology optimal; strong sprint velocity",
+        "transitionEffort": "None"
+      },
+      "predictedCompletion": {
+        "onTimeProb": 92,
+        "delay1MonthProb": 6,
+        "delay3MonthProb": 2
+      },
+      "accelerationOpportunity": {
+        "reason": "Highest ROI in portfolio (320%) with strong alignment (98%)",
+        "recommendation": "Prioritize for additional resources",
+        "potentialGain": "$450K additional annual value if delivered 2 months early"
+      }
+    },
+    "lessonsLearned": [
+      { "id": "LL006", "lesson": "Data governance framework established early prevented 4 weeks of rework", "category": "Data", "applicable": true },
+      { "id": "LL007", "lesson": "Business user involvement in sprint reviews increased adoption by 35%", "category": "Stakeholder", "applicable": true }
+    ]
   },
   {
     "id": "P005",
@@ -87,6 +227,37 @@
     "alignmentScore": 85,
     "roi": 165,
     "risks": ["Resource availability", "Integration complexity"],
-    "riskScore": 55
+    "riskScore": 55,
+    "aiInsights": {
+      "optimizedSchedule": {
+        "suggestedEndDate": "2025-11-15",
+        "timelineSavings": "2 weeks",
+        "confidence": 75,
+        "reasoning": "Integration blockers resolved; slight acceleration possible"
+      },
+      "suggestedReallocation": [
+        { "action": "Add", "resource": "Junior QA", "from": "ERP Modernization", "hours": 15, "impact": "+10% test coverage" }
+      ],
+      "projectedROI": {
+        "conservative": 140,
+        "expected": 165,
+        "optimistic": 195,
+        "confidence": 78
+      },
+      "recommendedMethodology": {
+        "current": "Agile",
+        "suggested": "Agile",
+        "reasoning": "Current methodology appropriate for mobile development",
+        "transitionEffort": "None"
+      },
+      "predictedCompletion": {
+        "onTimeProb": 72,
+        "delay1MonthProb": 22,
+        "delay3MonthProb": 6
+      }
+    },
+    "lessonsLearned": [
+      { "id": "LL008", "lesson": "API versioning strategy prevented 3 breaking changes", "category": "Technical", "applicable": true }
+    ]
   }
 ]
