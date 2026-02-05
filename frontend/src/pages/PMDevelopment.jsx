@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
 import { Award, TrendingUp, AlertTriangle, BookOpen, Target, Heart, Brain, GraduationCap, Users, Zap, Activity } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function PMDevelopment() {
   const [pmData, setPmData] = useState(null);
   const [aiInsight, setAiInsight] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/pm-scores`).then(r => r.json()).then(setPmData);
-    fetch(`${API}/chat`, {
+    authFetch(`${API}/pm-scores`).then(r => r.json()).then(setPmData);
+    authFetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Analyze PM team and recommend top 2 development priorities with specific training suggestions' })

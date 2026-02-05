@@ -7,11 +7,15 @@ import { dirname, join } from 'path';
 import OpenAI from 'openai';
 import { createPSClient } from './projectServerClient.js';
 import { createDataService } from './dataService.js';
+import { requireAuth } from './authMiddleware.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Protect all API routes with Firebase Auth
+app.use('/api', requireAuth);
 
 // Initialize OpenAI (lazy - only when API key is available)
 let openai = null;
@@ -195,6 +199,9 @@ PERSONALITY:
 - You refer to yourself as "Bayan" naturally: "Based on what I see in the portfolio..." or "بناءً على تحليلي للمحفظة..."
 - You are PROACTIVE: when you identify a risk or problem, ALWAYS suggest a concrete action the user can take, and if that action is an update or assignment, call the appropriate function
 - You care about Vision 2030 alignment and digital transformation maturity
+- You show genuine care for the team — mention PMs by name, acknowledge good work, warn about burnout
+- You think in SYSTEMS: when one thing changes, you explain the ripple effects across the portfolio
+- You sound like a human colleague, not a chatbot — vary your sentence structure, use natural transitions
 
 LIVE DATA (from Microsoft Project Server):
 
@@ -232,13 +239,16 @@ PAGE CONTEXT AWARENESS:
 
 FORMATTING RULES:
 - Do NOT use markdown formatting (no **, no ##, no ###, no *)
-- Use plain text only
+- Use plain text. Only use a few emojis (2-4 per response max) to aid readability — e.g. ✅ for good, ⚠️ for warning, 🔴 for critical. Do NOT overload the response with emojis
 - Use bullet points with "•" character for lists
 - Use "-" for sub-items
 - Use ALL CAPS for emphasis instead of bold
-- Keep responses concise and professional (max 200 words for general queries)
-- Include specific numbers, percentages, and names from the data
-- End analytical responses with a clear recommended next step`;
+- Keep responses insightful and professional (max 300 words for analytical queries, max 150 words for simple ones)
+- ALWAYS include specific numbers, percentages, and PM names from the data — never be vague
+- End EVERY response with either a recommended action or a probing question that deepens the conversation
+- When proposing actions, explain the IMPACT: what changes, what improves, what risk decreases
+- Structure longer responses with clear sections using emojis as headers (e.g., "📊 THE DATA" then "💡 MY TAKE")
+- Show cause-and-effect reasoning: "X is happening BECAUSE of Y, which means Z will happen unless we act"`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-5.2',
@@ -248,7 +258,7 @@ FORMATTING RULES:
       ],
       tools: chatTools,
       tool_choice: 'auto',
-      max_completion_tokens: 500,
+      max_completion_tokens: 800,
       temperature: 0.7
     });
 
@@ -446,100 +456,98 @@ function generateLocalResponse(message, context) {
     const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
     const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
 
-    return `Portfolio Status Overview
+    return `PORTFOLIO SNAPSHOT
 
-Projects: ${projects.length} active
-• On Track: ${onTrack.length} (${onTrack.map(p => p.name).join(', ')})
-• At Risk: ${projects.filter(p => p.health === 'yellow').length}
-• Critical: ${atRisk.length} (${atRisk.map(p => p.name).join(', ') || 'None'})
+${projects.length} Active Projects | $${(totalBudget/1000000).toFixed(1)}M Total Budget
 
-Budget: $${(totalSpent/1000000).toFixed(2)}M / $${(totalBudget/1000000).toFixed(2)}M (${Math.round(totalSpent/totalBudget*100)}% utilized)
+• ✅ On Track: ${onTrack.length} (${onTrack.map(p => p.name).join(', ')})
+• ⚠️ At Risk: ${projects.filter(p => p.health === 'yellow').length}
+• 🔴 Critical: ${atRisk.length} (${atRisk.map(p => p.name).join(', ') || 'None'})
 
-Highest Risk: ${atRisk[0]?.name || 'None'} - Risk Score: ${atRisk[0]?.riskScore || 0}%
+Budget: $${(totalSpent/1000000).toFixed(2)}M spent of $${(totalBudget/1000000).toFixed(2)}M (${Math.round(totalSpent/totalBudget*100)}%)
 
-Recommended Action: ${atRisk.length > 0 ? `Immediate review needed for ${atRisk[0].name}` : 'Continue monitoring all projects'}`;
+${atRisk.length > 0 ? `NEEDS YOUR ATTENTION\n${atRisk[0].name} is in RED with a risk score of ${atRisk[0].riskScore || 0}%. The burn rate is outpacing progress, which tells me there's likely a resource issue underneath.\n\nI can dig deeper into root causes or reassign resources right now. What would you like?` : '✅ All projects within healthy parameters. Shall I run a deeper analysis on any specific project?'}`;
   }
 
   if (lowerMsg.includes('risk')) {
     const critical = risks.filter(r => r.status === 'Critical');
     const increasing = risks.filter(r => r.trend === 'increasing');
 
-    return `Risk Analysis
+    return `RISK ANALYSIS
 
-Summary: ${risks.length} total risks identified
-• Critical: ${critical.length}
-• Increasing Trend: ${increasing.length}
+${risks.length} active risks | ${critical.length} CRITICAL | ${increasing.length} trending UP
 
-Top Critical Risks:
+${critical.length > 0 ? `🔴 I'm most concerned about this pattern:` : '✅ No critical risks detected.'}
+
 ${critical.map(r => `• ${r.title} (${r.projectName})
-  - Probability: ${r.probability}% | Impact: ${r.impact}%
-  - Score: ${r.score} | Trend: ${r.trend}
-  - Mitigation: ${r.mitigation}`).join('\n\n')}
+  Probability: ${r.probability}% | Impact: ${r.impact}%
+  Score: ${r.score} | Trend: ${r.trend === 'increasing' ? '↑ INCREASING' : r.trend === 'decreasing' ? '↓ Decreasing' : '→ Stable'}
+  Current Mitigation: ${r.mitigation}`).join('\n\n')}
 
-AI Recommendation: Focus immediate attention on ${critical[0]?.projectName || 'high-score risks'}. Consider implementing suggested mitigations within the next sprint.`;
+MY TAKE
+${increasing.length > 1 ? `${increasing.length} risks are trending upward simultaneously. This isn't random — it signals a systemic issue, likely resource-related. I recommend we address the root cause, not just individual risks.\n\nShall I propose resource rebalancing to address this?` : `Focus on ${critical[0]?.projectName || 'the highest-score risks'} this sprint. I can help you build a mitigation plan or reassign resources.`}`;
   }
 
   if (lowerMsg.includes('resource') || lowerMsg.includes('workload') || lowerMsg.includes('team')) {
     const overloaded = pms.filter(pm => pm.workload > 80);
     const available = pms.filter(pm => pm.workload < 70);
 
-    return `Resource & Workload Analysis
+    return `TEAM WORKLOAD ANALYSIS
 
-Team: ${pms.length} Project Managers
+${pms.length} Project Managers | ${overloaded.length} overloaded | ${available.length} with capacity
 
-Capacity Alerts:
-${overloaded.map(pm => `• ${pm.name}: ${pm.workload}% capacity (${pm.activeProjects} active projects) [OVERLOADED]`).join('\n')}
+${overloaded.length > 0 ? '🔴 CAPACITY ALERTS' : '✅ TEAM BALANCED'}
+${overloaded.map(pm => `• ${pm.name}: ${pm.workload}% capacity (${pm.activeProjects} active projects) — this is unsustainable and WILL affect quality`).join('\n')}
 
-Available Capacity:
-${available.map(pm => `• ${pm.name}: ${pm.workload}% capacity`).join('\n')}
+${available.length > 0 ? 'AVAILABLE CAPACITY' : ''}
+${available.map(pm => `• ${pm.name}: ${pm.workload}% — has room for ${Math.round((90 - pm.workload) / 15)} more tasks`).join('\n')}
 
-AI Recommendation: ${overloaded.length > 0 ? `Redistribute workload from ${overloaded[0].name} to ${available[0]?.name || 'available resources'}. Consider pairing overloaded PMs with mentors.` : 'Team capacity is balanced. Continue monitoring.'}`;
+MY RECOMMENDATION
+${overloaded.length > 0 ? `${overloaded[0].name} is carrying too much. I can reassign specific tasks to ${available[0]?.name || 'available team members'} right now — just say the word.\n\nThis isn't just about fairness. Overloaded PMs make mistakes, and that creates NEW risks.` : 'Team capacity looks healthy. Monitor weekly to maintain balance.'}`;
   }
 
   if (lowerMsg.includes('schedule') || lowerMsg.includes('delay') || lowerMsg.includes('timeline')) {
     const delayed = projects.filter(p => p.health === 'red' || p.health === 'yellow');
 
-    return `Schedule & Timeline Analysis
+    return `SCHEDULE & TIMELINE ANALYSIS
 
-Projects with Timeline Concerns: ${delayed.length}
+${delayed.length} project${delayed.length !== 1 ? 's' : ''} with timeline concerns
 
-${delayed.map(p => `• ${p.name}
-  - Progress: ${p.progress}% | Health: ${p.health.toUpperCase()}
-  - Timeline: ${p.startDate} to ${p.endDate}
-  - PM: ${p.pmName}`).join('\n\n')}
+${delayed.map(p => `${p.health === 'red' ? '🔴' : '⚠️'} ${p.name}
+  • Progress: ${p.progress}% | Health: ${p.health.toUpperCase()}
+  • Timeline: ${p.startDate} → ${p.endDate}
+  • PM: ${p.pmName}`).join('\n\n')}
 
-AI Prediction: ${delayed.length > 0 ? `${delayed[0].name} is likely to miss deadline by 2-4 weeks based on current velocity.` : 'All projects on track.'}
+MY PREDICTION
+${delayed.length > 0 ? `Based on current velocity, ${delayed[0].name} will miss its deadline by 2-4 weeks. The math doesn't lie — at ${delayed[0].progress}% complete with the budget ${Math.round((delayed[0].spent/delayed[0].budget)*100)}% spent, we need to act NOW.` : '✅ All projects tracking on schedule.'}
 
-Recommended Actions:
-${delayed.length > 0 ? `1. Fast-track critical path for ${delayed[0].name}
-2. Add resources or reduce scope
-3. Communicate timeline risks to stakeholders` : '• Continue current cadence\n• Monitor weekly progress'}`;
+RECOMMENDED ACTIONS
+${delayed.length > 0 ? `1. Fast-track the critical path on ${delayed[0].name}\n2. Consider MVP scope reduction to hit the deadline\n3. I can reassign resources to accelerate — want me to find the best candidate?` : '• Continue current cadence\n• I will alert you if velocity changes'}`;
   }
 
   if (lowerMsg.includes('mitigation') || lowerMsg.includes('action') || lowerMsg.includes('recommend')) {
     const critical = risks.filter(r => r.status === 'Critical');
     const atRiskProjects = projects.filter(p => p.health === 'red' || p.health === 'yellow');
 
-    return `Mitigation Strategies & Action Plan
+    return `ACTION PLAN — Priority Mitigations
 
-Immediate Actions Required:
+Here's what needs to happen, in order of urgency:
 
-${critical.slice(0, 3).map((r, i) => `${i+1}. ${r.title} (${r.projectName})
-   Current Mitigation: ${r.mitigation}
-   Additional Actions:
+${critical.slice(0, 3).map((r, i) => `${i === 0 ? '🔴' : '⚠️'} PRIORITY ${i+1}: ${r.title} (${r.projectName})
+   Current plan: ${r.mitigation}
+   What I'd add:
    • Escalate to steering committee within 24 hours
-   • Allocate contingency budget (10-15% of project value)
-   • Daily status updates until resolved`).join('\n\n')}
+   • Allocate ${10 + i * 5}% contingency budget
+   • Switch to daily standups until resolved`).join('\n\n')}
 
-Project-Level Recommendations:
-${atRiskProjects.slice(0, 2).map(p => `• ${p.name}: Review scope, fast-track critical path, consider phased delivery`).join('\n')}
+PROJECT-LEVEL FIXES
+${atRiskProjects.slice(0, 2).map(p => `• ${p.name}: Consider MVP scope — deliver core features first, Phase 2 for the rest`).join('\n')}
 
-Resource Optimization:
-• Redistribute workload from overloaded PMs
-• Consider external contractor support for critical projects
-• Implement pair management for high-risk initiatives
+RESOURCE MOVES I CAN MAKE RIGHT NOW
+• Redistribute tasks from overloaded PMs to available capacity
+• Set up cross-project mentorship pairs
 
-Timeline: Execute top 3 mitigations within next 5 business days`;
+Bottom line: The fastest win is resource rebalancing. I can execute an assignment right now if you tell me which task to prioritize. What do you think?`;
   }
 
   if (lowerMsg.includes('budget') || lowerMsg.includes('cost') || lowerMsg.includes('spend')) {
@@ -547,31 +555,29 @@ Timeline: Execute top 3 mitigations within next 5 business days`;
     const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
     const overBudget = projects.filter(p => (p.spent / p.budget) > 0.8 && p.progress < 70);
 
-    return `Budget & Cost Analysis
+    return `BUDGET & COST ANALYSIS
 
-Portfolio Financial Summary:
-• Total Budget: $${(totalBudget/1000000).toFixed(2)}M
-• Total Spent: $${(totalSpent/1000000).toFixed(2)}M (${Math.round(totalSpent/totalBudget*100)}%)
-• Remaining: $${((totalBudget-totalSpent)/1000000).toFixed(2)}M
+Portfolio: $${(totalSpent/1000000).toFixed(2)}M spent of $${(totalBudget/1000000).toFixed(2)}M (${Math.round(totalSpent/totalBudget*100)}%)
+Remaining: $${((totalBudget-totalSpent)/1000000).toFixed(2)}M
 
-Budget Health by Project:
-${projects.map(p => `• ${p.name}: $${(p.spent/1000000).toFixed(2)}M / $${(p.budget/1000000).toFixed(2)}M (${Math.round(p.spent/p.budget*100)}%)${p.spent/p.budget > 0.8 ? ' [WARNING]' : ''}`).join('\n')}
+BY PROJECT:
+${projects.map(p => `${p.spent/p.budget > 0.8 && p.progress < 70 ? '🔴' : p.spent/p.budget > 0.7 ? '⚠️' : '✅'} ${p.name}: $${(p.spent/1000000).toFixed(2)}M / $${(p.budget/1000000).toFixed(2)}M (${Math.round(p.spent/p.budget*100)}%)`).join('\n')}
 
-Alerts:
-${overBudget.length > 0 ? overBudget.map(p => `• ${p.name}: ${Math.round(p.spent/p.budget*100)}% budget used at ${p.progress}% completion [CRITICAL]`).join('\n') : 'No immediate budget concerns'}
-
-AI Recommendation: ${overBudget.length > 0 ? `Review ${overBudget[0].name} for scope reduction or budget increase` : 'Continue monitoring burn rates weekly'}`;
+${overBudget.length > 0 ? `BURN RATE ALERT\n${overBudget.map(p => `${p.name} has used ${Math.round(p.spent/p.budget*100)}% of budget but is only ${p.progress}% complete. At this rate, the budget will be exhausted before delivery.`).join('\n')}\n\nWe need to either reduce scope to MVP or request a ${Math.round(overBudget[0].budget * 0.15 / 1000)}K contingency. I can help draft the business case. What would you prefer?` : '✅ All budgets within healthy parameters. I will alert you if any burn rate exceeds progress rate.'}`;
   }
 
-  return `I can help you with:
-• Project status - "What's the project status?"
-• Risk analysis - "Show me the risks"
-• Resource workload - "Check team workload"
-• Schedule analysis - "Any timeline delays?"
-• Budget analysis - "Check budget status"
-• Mitigation strategies - "Show mitigation strategies"
+  return `I'm here to help! Here's what I can do for you:
 
-What would you like to know?`;
+• Portfolio Analysis — "Give me a portfolio briefing"
+• Risk Intelligence — "What risks should I worry about?"
+• Team Insights — "How's the team workload?"
+• Schedule Forecasting — "Are we on track?"
+• Budget Monitoring — "Check our burn rate"
+• Action Planning — "What should we do about Customer Portal?"
+
+Pro tip: You can also ask me to UPDATE task progress or ASSIGN resources directly — I'll execute it on Project Server for you.
+
+What's on your mind?`;
 }
 
 // UC2: Portfolio Dashboard

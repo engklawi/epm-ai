@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, LineChart, Line } from 'recharts';
 import { Award, TrendingUp, TrendingDown, Users, Star, Target, Brain, Activity } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function PMScoring() {
   const [pmData, setPmData] = useState(null);
@@ -10,11 +9,11 @@ export default function PMScoring() {
   const [aiInsight, setAiInsight] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/pm-scores`).then(r => r.json()).then(data => {
+    authFetch(`${API}/pm-scores`).then(r => r.json()).then(data => {
       setPmData(data);
       if (data.projectManagers?.length > 0) setSelectedPM(data.projectManagers[0]);
     });
-    fetch(`${API}/chat`, {
+    authFetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Analyze PM performance data and identify top performer strengths and areas for team-wide improvement' })

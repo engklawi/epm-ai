@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
 import { TrendingUp, CheckCircle, Clock, DollarSign, Brain, Award, Target, Zap } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function PMOPerformance() {
   const [portfolio, setPortfolio] = useState(null);
   const [aiInsight, setAiInsight] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
-    fetch(`${API}/chat`, {
+    authFetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
+    authFetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Analyze PMO performance metrics and give 1 key insight with recommended action in 2-3 sentences' })

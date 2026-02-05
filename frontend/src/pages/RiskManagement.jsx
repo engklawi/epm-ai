@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus, Brain, Shield, Zap, Activity, History, BookOpen } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, ZAxis, AreaChart, Area, BarChart, Bar } from 'recharts';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function RiskManagement() {
   const [riskData, setRiskData] = useState(null);
@@ -10,8 +9,8 @@ export default function RiskManagement() {
   const [selectedRisk, setSelectedRisk] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/risks`).then(r => r.json()).then(setRiskData);
-    fetch(`${API}/chat`, {
+    authFetch(`${API}/risks`).then(r => r.json()).then(setRiskData);
+    authFetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Analyze all risks and give me a 2-sentence executive summary with the most critical action needed' })

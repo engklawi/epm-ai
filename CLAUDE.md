@@ -81,10 +81,13 @@ Project Server's queue uses **correlation-based job grouping** (correlation ID =
 ## Project Structure
 ```
 EPM-AI/
+├── start.sh                   # One-command startup script
 ├── backend/
 │   ├── server.js              # Main Express API (GPT-5.2 + Bayan persona + function calling + PS write-back)
+│   ├── authMiddleware.js      # Firebase Auth token verification + email whitelist
 │   ├── projectServerClient.js # NTLM REST API client (read + task/schedule updates)
 │   ├── dataService.js         # Data orchestrator (live PS + mock JSON merge, TTL cache)
+│   ├── firebase-sa-key.json   # Firebase service account key (gitignored, local only)
 │   ├── app.yaml               # GCP App Engine config (default service)
 │   ├── data/                  # Mock JSON data files
 │   │   ├── projects.json      # 5 projects (P001-P005)
@@ -104,9 +107,16 @@ EPM-AI/
 │   ├── src/
 │   │   ├── App.jsx                  # Main shell (collapsible sidebar, routing, PS indicator, BayanPanel)
 │   │   ├── App.css                  # Global styles
+│   │   ├── firebase.js              # Firebase client SDK init
+│   │   ├── contexts/
+│   │   │   └── AuthContext.jsx      # Auth state, login(), logout(), useAuth()
+│   │   ├── utils/
+│   │   │   └── authFetch.js         # Authenticated fetch wrapper + API constant
 │   │   ├── components/
-│   │   │   └── BayanPanel.jsx       # Persistent AI chat sidebar (330px, page-context aware)
-│   │   └── pages/                   # 9 Use Case pages (React + Vite)
+│   │   │   ├── BayanPanel.jsx       # Persistent AI chat sidebar (350px, page-context aware)
+│   │   │   └── ProtectedRoute.jsx   # Route guard for authenticated routes
+│   │   └── pages/                   # 9 Use Case pages + Login (React + Vite)
+│   │       ├── LoginPage.jsx        # Professional login (DGA + Bayan branding)
 │   │       ├── DirectorsDashboard.jsx  # UC2: Portfolio Dashboard
 │   │       ├── StrategyROI.jsx         # UC3: Strategy & ROI
 │   │       ├── PMOPerformance.jsx      # UC4: PMO Performance
@@ -213,9 +223,13 @@ Parsed by `projectServerClient.js → parseDescription()`.
 
 ## Local Development
 ```bash
+# One command to start everything (recommended)
+./start.sh
+
+# Or manually:
 # Backend (Terminal 1)
 cd backend
-PS_PASSWORD='rXr<{=eiKQ,49+V' npm run dev
+GOOGLE_APPLICATION_CREDENTIALS=./firebase-sa-key.json PS_PASSWORD='rXr<{=eiKQ,49+V' npm run dev
 
 # Frontend (Terminal 2)
 cd frontend && npm run dev
@@ -345,7 +359,7 @@ cd frontend && npx playwright test --reporter=list
 - **Personality:** Confident, data-driven, proactive
 
 ### Key Features
-1. **Persistent Right Sidebar** — `BayanPanel.jsx` — 330px fixed panel always visible on all pages
+1. **Persistent Right Sidebar** — `BayanPanel.jsx` — 350px fixed panel always visible on all pages
    - Page-context aware: detects current page and provides relevant suggestions
    - Clean professional design (#f8fafc background, subtle borders)
 2. **Proactive Actions** — AI recommends task updates and resource assignments as fixes to problems
@@ -379,3 +393,57 @@ POST /api/chat/execute → resolves names to IDs → executes on PS
     ↓
 Success → cache invalidated → UI refreshed
 ```
+
+---
+
+## Authentication
+
+### Overview
+Firebase Authentication with email/password, whitelist-only access. No public sign-up.
+
+### Demo Credentials
+| Email | Password |
+|-------|----------|
+| `info@macsoft.ai` | `Demo2026!` |
+| `omar@macsoft.ai` | `Demo2026!` |
+
+### Architecture
+```
+Frontend (React)
+    │
+    ├── firebase.js           # Firebase client SDK init
+    ├── AuthContext.jsx       # React context: user state, login(), logout()
+    ├── ProtectedRoute.jsx    # Redirects unauthenticated users to /login
+    ├── LoginPage.jsx         # Split-panel login (DGA logo + Bayan branding)
+    └── authFetch.js          # Wrapper that injects Bearer token into API calls
+
+Backend (Express)
+    │
+    └── authMiddleware.js     # Firebase Admin token verification + email whitelist
+        └── Uses Application Default Credentials (auto on App Engine)
+```
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `frontend/src/firebase.js` | Firebase client config (public values) |
+| `frontend/src/contexts/AuthContext.jsx` | `useAuth()` hook, login/logout |
+| `frontend/src/utils/authFetch.js` | `authFetch()` + `API` constant |
+| `frontend/src/components/ProtectedRoute.jsx` | Route guard |
+| `frontend/src/pages/LoginPage.jsx` | Professional login page |
+| `backend/authMiddleware.js` | `requireAuth` middleware |
+
+### Adding New Users
+1. Create user in Firebase Console (Authentication → Users → Add User)
+2. Add email to `ALLOWED_EMAILS` array in `backend/authMiddleware.js`
+
+### Local Development
+```bash
+# Backend needs service account key
+cd backend
+GOOGLE_APPLICATION_CREDENTIALS=./firebase-sa-key.json PS_PASSWORD='...' npm run dev
+```
+
+### Production (App Engine)
+- Uses GCP Application Default Credentials automatically
+- No service account key needed — Firebase Admin SDK authenticates via project metadata

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Send, Mic, MicOff, Loader, CheckCircle, XCircle, TrendingUp, Users, BarChart3, AlertTriangle, Lightbulb } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 // Page context mapping — tells Bayan where the user is and what data they're viewing
 const PAGE_CONTEXT = {
@@ -81,6 +80,7 @@ export default function BayanPanel() {
   const [loading, setLoading] = useState(false);
   const [conversationContext, setConversationContext] = useState([]);
   const [isListening, setIsListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState('en-US');
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
   const prevPathRef = useRef(location.pathname);
@@ -93,7 +93,7 @@ export default function BayanPanel() {
     if (!initialized) {
       setMessages([{
         role: 'ai',
-        content: `Hello! I'm Bayan, your AI PMO Assistant.\n\nI'm here to help you understand your portfolio, analyze risks, and take action. I'm currently viewing the ${pageCtx.name} with you.\n\nWhat would you like to know?`,
+        content: `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}! I'm Bayan, your AI PMO Director.\n\nI've already scanned your entire portfolio \u2014 5 projects, 37 tasks, 4 PMs, and 6 active risks. I'm connected live to Project Server and ready to take action.\n\n⚠️ Quick heads up: I'm seeing a pattern on Customer Portal that needs your attention. Want me to brief you?`,
         suggestions: pageCtx.suggestions,
       }]);
       setInitialized(true);
@@ -122,15 +122,15 @@ export default function BayanPanel() {
   // Get a brief insight about the current page
   function getPageInsight(path) {
     const insights = {
-      '/dashboard': "I can see your portfolio health at a glance.",
-      '/strategy': "Let's look at how your projects align with strategic objectives.",
-      '/pmo': "Here we can analyze PMO performance metrics.",
-      '/alignment': "I'll help you identify alignment gaps.",
-      '/risks': "I notice there are some risks that need attention.",
-      '/docs': "I can help you generate reports and documents.",
-      '/predictions': "Let's review the AI predictions and forecasts.",
-      '/pm-scores': "I can analyze PM performance for you.",
-      '/pm-dev': "Let's look at development opportunities for your PMs.",
+      '/dashboard': "I can see 2 projects in GREEN, 2 in YELLOW, and 1 in RED. Customer Portal needs immediate attention \u2014 it's burning budget 2.3x faster than progress.",
+      '/strategy': "Your Digital Transformation objective is 92% aligned, but Customer Experience is at risk if Customer Portal slips further.",
+      '/pmo': "PMO performance looks strong overall, but I'm detecting a workload imbalance \u2014 Fatima Hassan is carrying 30% more than the team average.",
+      '/alignment': "I've mapped all 5 projects against 4 strategic objectives. One gap stands out: Cost Optimization has only one supporting project.",
+      '/risks': "⚠️ 3 of your 6 risks are trending UPWARD this month, and they're all clustering on Customer Portal. This isn't coincidence \u2014 it's a systemic issue.",
+      '/docs': "I can generate executive-ready status reports, project charters, or meeting summaries in seconds. Which project should I write about?",
+      '/predictions': "My forecast models show Cloud Migration has an 85% success probability, but Customer Portal is at only 30% without intervention.",
+      '/pm-scores': "Mohammed Ali leads on delivery (92 score), while Sarah Ahmed excels at stakeholder management (95). But Fatima's scores are declining due to overload.",
+      '/pm-dev': "I've identified a mentorship opportunity: pairing Mohammed Ali with Sarah Ahmed could boost both their weaker areas.",
     };
     return insights[path] || "I'm ready to assist.";
   }
@@ -148,7 +148,7 @@ export default function BayanPanel() {
     }
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = voiceLang;
     recognition.interimResults = true;
     recognition.continuous = false;
     recognition.onresult = (event) => {
@@ -169,7 +169,7 @@ export default function BayanPanel() {
   const executeAction = async (msgIndex, action) => {
     setMessages(prev => prev.map((msg, i) => i === msgIndex ? { ...msg, actionStatus: 'executing' } : msg));
     try {
-      const res = await fetch(`${API}/chat/execute`, {
+      const res = await authFetch(`${API}/chat/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: action.type, params: action.params })
@@ -216,7 +216,7 @@ export default function BayanPanel() {
     const contextPrefix = `[Page Context: User is viewing "${pageCtx.name}". ${pageCtx.context}]\n\n`;
 
     try {
-      const res = await fetch(`${API}/chat`, {
+      const res = await authFetch(`${API}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -344,23 +344,31 @@ export default function BayanPanel() {
 
       {/* Input - More compact */}
       <div className="bayan-input">
+        <button
+          onClick={() => setVoiceLang(voiceLang === 'en-US' ? 'ar-SA' : 'en-US')}
+          className="lang-toggle-btn"
+          title={voiceLang === 'en-US' ? 'Switch voice to Arabic' : 'Switch voice to English'}
+        >
+          {voiceLang === 'en-US' ? 'EN' : 'ع'}
+        </button>
         <button onClick={toggleVoice} className={`voice-btn ${isListening ? 'listening' : ''}`}>
-          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+          {isListening ? <MicOff size={18} /> : <Mic size={18} />}
         </button>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyPress={e => e.key === 'Enter' && sendMessage()}
-          placeholder="Ask Bayan..."
+          placeholder={voiceLang === 'en-US' ? 'Ask Bayan...' : '...اسأل بيان'}
+          dir={voiceLang === 'ar-SA' ? 'rtl' : 'ltr'}
         />
         <button onClick={() => sendMessage()} disabled={loading} className="send-btn">
-          <Send size={16} />
+          <Send size={18} />
         </button>
       </div>
 
       <style>{`
         .bayan-panel {
-          width: 330px;
+          width: 350px;
           height: 100vh;
           background: #f8fafc;
           border-left: 1px solid #e2e8f0;
@@ -423,10 +431,10 @@ export default function BayanPanel() {
         }
 
         .message-bubble {
-          padding: 10px 12px;
+          padding: 12px 14px;
           border-radius: 14px;
-          font-size: 0.8rem;
-          line-height: 1.55;
+          font-size: 0.85rem;
+          line-height: 1.6;
           white-space: pre-wrap;
         }
 
@@ -662,9 +670,31 @@ export default function BayanPanel() {
           box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
         }
 
+        .lang-toggle-btn {
+          width: 34px;
+          height: 42px;
+          border-radius: 8px;
+          border: 1px solid rgba(99, 102, 241, 0.15);
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          color: #6366f1;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.7rem;
+          font-weight: 700;
+          transition: all 0.2s;
+          flex-shrink: 0;
+        }
+
+        .lang-toggle-btn:hover {
+          background: linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%);
+          border-color: rgba(99, 102, 241, 0.3);
+        }
+
         .voice-btn {
-          width: 38px;
-          height: 38px;
+          width: 42px;
+          height: 42px;
           border-radius: 10px;
           border: 1px solid rgba(99, 102, 241, 0.15);
           background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -691,8 +721,8 @@ export default function BayanPanel() {
         }
 
         .send-btn {
-          width: 38px;
-          height: 38px;
+          width: 42px;
+          height: 42px;
           border-radius: 10px;
           border: none;
           background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);

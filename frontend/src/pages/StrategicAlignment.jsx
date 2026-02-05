@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { AlertTriangle, ArrowRight, TrendingUp } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function StrategicAlignment() {
   const [strategy, setStrategy] = useState(null);
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/strategy`).then(r => r.json()).then(setStrategy);
-    fetch(`${API}/projects`).then(r => r.json()).then(setProjects);
+    authFetch(`${API}/strategy`).then(r => r.json()).then(setStrategy);
+    authFetch(`${API}/projects`).then(r => r.json()).then(setProjects);
   }, []);
 
   if (!strategy) return <div style={{ padding: 40 }}>Loading...</div>;

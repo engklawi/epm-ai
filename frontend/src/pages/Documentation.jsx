@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, Sparkles, CheckCircle, Clock, RefreshCw, FileCode, FilePlus } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function Documentation() {
   const [projects, setProjects] = useState([]);
@@ -12,7 +11,7 @@ export default function Documentation() {
   const [recentDocs, setRecentDocs] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/projects`).then(r => r.json()).then(data => {
+    authFetch(`${API}/projects`).then(r => r.json()).then(data => {
       setProjects(data);
       if (data.length > 0) setSelectedProject(data[0].id);
     });
@@ -30,7 +29,7 @@ export default function Documentation() {
     setDocument(null);
     
     try {
-      const res = await fetch(`${API}/documents/generate`, {
+      const res = await authFetch(`${API}/documents/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: selectedType, projectId: selectedProject })

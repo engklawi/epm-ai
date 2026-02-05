@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, Line, AreaChart, Area } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, FolderKanban, Target, AlertTriangle, Activity, Zap, Brain, Sliders, PlayCircle } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function DirectorsDashboard() {
   const [portfolio, setPortfolio] = useState(null);
@@ -16,8 +15,8 @@ export default function DirectorsDashboard() {
   const [scenarioResults, setScenarioResults] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
-    fetch(`${API}/chat`, {
+    authFetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
+    authFetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Give me a 2-sentence executive summary of the portfolio health and top recommendation' })

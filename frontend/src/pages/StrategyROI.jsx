@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell } from 'recharts';
 import { Target, TrendingUp, Layers, CheckCircle } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function StrategyROI() {
   const [strategy, setStrategy] = useState(null);
   const [expandedObj, setExpandedObj] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/strategy`).then(r => r.json()).then(setStrategy);
+    authFetch(`${API}/strategy`).then(r => r.json()).then(setStrategy);
   }, []);
 
   if (!strategy) return <div style={{ padding: 40 }}>Loading...</div>;

@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, Cell } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Users, Calendar, Brain, Zap, Target, Activity } from 'lucide-react';
-
-const API = 'http://localhost:3001/api';
+import { API, authFetch } from '../utils/authFetch';
 
 export default function ExecutivePredictions() {
   const [risks, setRisks] = useState(null);
@@ -10,9 +9,9 @@ export default function ExecutivePredictions() {
   const [aiPrediction, setAiPrediction] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/risks`).then(r => r.json()).then(setRisks);
-    fetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
-    fetch(`${API}/chat`, {
+    authFetch(`${API}/risks`).then(r => r.json()).then(setRisks);
+    authFetch(`${API}/portfolio`).then(r => r.json()).then(setPortfolio);
+    authFetch(`${API}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'As an executive advisor, predict the top 2 challenges for the next quarter and recommend strategic actions' })
