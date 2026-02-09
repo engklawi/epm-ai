@@ -11,7 +11,7 @@
     "score": 56,
     "status": "Open",
     "mitigation": "Cross-train team members, establish resource buffer",
-    "predictedDate": "2026-02-15",
+    "predictedDate": "2026-08-15",
     "trend": "increasing",
     "aiAnalysis": {
       "patternMatch": "RP002",
@@ -47,7 +47,7 @@
     "score": 42,
     "status": "Monitoring",
     "mitigation": "Strict change control process, regular scope reviews",
-    "predictedDate": "2026-03-01",
+    "predictedDate": "2026-09-01",
     "trend": "stable",
     "aiAnalysis": {
       "patternMatch": "RP003",
@@ -83,7 +83,7 @@
     "score": 77,
     "status": "Critical",
     "mitigation": "Immediate cost review, scope reduction, stakeholder escalation",
-    "predictedDate": "2025-08-15",
+    "predictedDate": "2026-03-15",
     "trend": "increasing",
     "aiAnalysis": {
       "patternMatch": "RP001",
@@ -120,7 +120,7 @@
     "score": 49,
     "status": "Open",
     "mitigation": "Allocate sprint for refactoring, bring in technical consultant",
-    "predictedDate": "2025-07-30",
+    "predictedDate": "2026-03-30",
     "trend": "stable",
     "aiAnalysis": {
       "patternMatch": "RP004",
@@ -149,14 +149,14 @@
     "projectId": "P003",
     "projectName": "Customer Portal",
     "title": "Timeline delay",
-    "description": "Project likely to miss Q3 deadline",
+    "description": "Project likely to miss Q2 deadline",
     "category": "Schedule",
     "probability": 80,
     "impact": 85,
     "score": 68,
     "status": "Critical",
-    "mitigation": "Fast-track critical path, add resources, negotiate deadline extension",
-    "predictedDate": "2025-09-30",
+    "mitigation": "Fast-track critical path, add resources, negotiate Q2 deadline extension",
+    "predictedDate": "2026-05-31",
     "trend": "increasing",
     "aiAnalysis": {
       "patternMatch": "RP001",
@@ -197,7 +197,7 @@
     "score": 33,
     "status": "Monitoring",
     "mitigation": "Develop adapter layer, engage legacy team early",
-    "predictedDate": "2025-10-15",
+    "predictedDate": "2026-04-15",
     "trend": "decreasing",
     "aiAnalysis": {
       "patternMatch": "RP004",

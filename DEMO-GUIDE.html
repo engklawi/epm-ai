@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPM-AI Demo Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    background: white;
+  }
+
+  /* Cover Page */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #312e81 0%, #6366f1 50%, #8b5cf6 100%);
+    color: white;
+    text-align: center;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.08) 0%, transparent 60%),
+                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  }
+
+  .cover-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-icon {
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 40px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .cover-icon svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .cover h1 {
+    font-size: 3.2rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .cover h2 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    opacity: 0.85;
+    margin-bottom: 50px;
+    max-width: 500px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  .cover-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Page Layout */
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 50px;
+  }
+
+  /* Setup Section */
+  .setup-section {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 50px;
+    page-break-after: always;
+  }
+
+  .setup-section h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #166534;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .setup-section ol {
+    padding-left: 24px;
+    color: #15803d;
+  }
+
+  .setup-section li {
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+  }
+
+  .setup-section code {
+    background: rgba(22, 101, 52, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #166534;
+  }
+
+  /* Act Header */
+  .act-header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid;
+    page-break-before: always;
+  }
+
+  .act-header:first-of-type {
+    page-break-before: auto;
+  }
+
+  .act-number {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .act-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  .act-header .goal {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.7;
+    font-style: italic;
+  }
+
+  .act-header .timing {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  /* Act Colors */
+  .act-1 .act-header { border-color: #ef4444; }
+  .act-1 .act-number { color: #ef4444; }
+  .act-1 .act-header h2 { color: #dc2626; }
+  .act-1 .timing { background: #fef2f2; color: #dc2626; }
+
+  .act-2 .act-header { border-color: #f59e0b; }
+  .act-2 .act-number { color: #f59e0b; }
+  .act-2 .act-header h2 { color: #d97706; }
+  .act-2 .timing { background: #fffbeb; color: #d97706; }
+
+  .act-3 .act-header { border-color: #6366f1; }
+  .act-3 .act-number { color: #6366f1; }
+  .act-3 .act-header h2 { color: #4f46e5; }
+  .act-3 .timing { background: #eef2ff; color: #4f46e5; }
+
+  .act-4 .act-header { border-color: #22c55e; }
+  .act-4 .act-number { color: #22c55e; }
+  .act-4 .act-header h2 { color: #16a34a; }
+  .act-4 .timing { background: #f0fdf4; color: #16a34a; }
+
+  .act-5 .act-header { border-color: #8b5cf6; }
+  .act-5 .act-number { color: #8b5cf6; }
+  .act-5 .act-header h2 { color: #7c3aed; }
+  .act-5 .timing { background: #faf5ff; color: #7c3aed; }
+
+  /* Step */
+  .step {
+    margin-bottom: 30px;
+    padding-left: 20px;
+    border-left: 3px solid #e2e8f0;
+  }
+
+  .step h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #6366f1;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .step ul {
+    padding-left: 18px;
+    margin-bottom: 10px;
+  }
+
+  .step li {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #475569;
+  }
+
+  /* Say-this callout */
+  .say-this {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+    border-left: 4px solid #eab308;
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin: 12px 0;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: #854d0e;
+  }
+
+  .say-this::before {
+    content: '🎤 SAY: ';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Type-this callout */
+  .type-this {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border-left: 4px solid #6366f1;
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin: 12px 0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #3730a3;
+  }
+
+  .type-this::before {
+    content: '⌨️ TYPE IN BAYAN: ';
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 4px;
+    opacity: 0.7;
+  }
+
+  /* Transition callout */
+  .transition {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #cbd5e1;
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: #475569;
+    text-align: center;
+  }
+
+  .transition::before {
+    content: '➡️ TRANSITION';
+    display: block;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: #94a3b8;
+    margin-bottom: 6px;
+  }
+
+  /* Pause callout */
+  .pause {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px dashed #fca5a5;
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin: 12px 0;
+    font-size: 0.9rem;
+    color: #991b1b;
+  }
+
+  .pause::before {
+    content: '⏸️ PAUSE — LET THIS LAND';
+    display: block;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  /* WOW callout */
+  .wow-moment {
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+    border: 2px solid #c084fc;
+    padding: 18px 22px;
+    border-radius: 12px;
+    margin: 16px 0;
+    text-align: center;
+  }
+
+  .wow-moment::before {
+    content: '✨ WOW MOMENT';
+    display: block;
+    font-weight: 800;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: #7c3aed;
+    margin-bottom: 6px;
+  }
+
+  /* Reference tables */
+  .ref-section {
+    margin-top: 50px;
+    page-break-before: always;
+  }
+
+  .ref-section h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 36px;
+    font-size: 0.85rem;
+  }
+
+  .ref-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    color: #374151;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .ref-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+    vertical-align: top;
+  }
+
+  .ref-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .ref-table .phrase {
+    font-style: italic;
+    color: #6366f1;
+    font-weight: 500;
+  }
+
+  /* Tips list */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .tip-card {
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  .tip-card.do {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+
+  .tip-card.dont {
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+
+  .tip-card h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .tip-card.dont h4 { color: #dc2626; }
+  .tip-card.do h4 { color: #16a34a; }
+
+  .tip-card li {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: #475569;
+  }
+
+  /* Key data */
+  .data-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .data-card {
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid;
+  }
+
+  .data-card.red { border-color: #fca5a5; background: #fef2f2; }
+  .data-card.green { border-color: #86efac; background: #f0fdf4; }
+  .data-card.yellow { border-color: #fde68a; background: #fffbeb; }
+  .data-card.blue { border-color: #93c5fd; background: #eff6ff; }
+
+  .data-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .data-card.red h4 { color: #dc2626; }
+  .data-card.green h4 { color: #16a34a; }
+  .data-card.yellow h4 { color: #d97706; }
+  .data-card.blue h4 { color: #2563eb; }
+
+  .data-card p {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  .data-card .stat {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 4px 0;
+  }
+
+  /* Recovery table */
+  .recovery-card {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 36px;
+  }
+
+  .recovery-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 16px;
+  }
+
+  .recovery-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+  }
+
+  .recovery-item .issue {
+    font-weight: 600;
+    color: #92400e;
+    min-width: 200px;
+  }
+
+  .recovery-item .fix {
+    color: #78716c;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 0;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 40px;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover { height: 100vh; }
+    .page { padding: 40px 50px; }
+    .act-header { page-break-before: always; }
+    .act-header:first-of-type { page-break-before: auto; }
+    .step { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cover Page -->
+<div class="cover">
+  <div class="cover-content">
+    <div class="cover-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <h1>The Ultimate<br>EPM-AI Demo Guide</h1>
+    <h2>A step-by-step playbook for presenting Bayan AI to executives</h2>
+    <div class="cover-meta">
+      <span>&#128337; 20 Minutes</span>
+      <span>&#127917; 5 Acts</span>
+      <span>&#128640; 16 Steps</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Pre-Demo Setup -->
+  <div class="setup-section">
+    <h2>&#9989; Pre-Demo Setup (2 minutes before)</h2>
+    <ol>
+      <li>Open <strong>https://bayan-dga.macsoft.ai/</strong> in Chrome</li>
+      <li>Login with <code>info@macsoft.ai</code> / <code>Demo2026!</code></li>
+      <li>Make sure the Bayan panel is visible on the right side</li>
+      <li>Have the browser in full-screen mode (no distractions)</li>
+      <li>Start on the <strong>Portfolio Dashboard</strong> page</li>
+    </ol>
+  </div>
+
+  <!-- ACT 1 -->
+  <div class="act-1">
+    <div class="act-header">
+      <div class="act-number">ACT 1 OF 5</div>
+      <h2>"THE PROBLEM"</h2>
+      <div class="goal">Hook the audience &mdash; show them a real crisis the AI found</div>
+      <span class="timing">&#128337; 5 MINUTES</span>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">1</span> Portfolio Dashboard</h3>
+      <div class="say-this">"This is a live dashboard connected to Microsoft Project Server. Everything you see is real data, not a mockup."</div>
+      <ul>
+        <li>Point to the <strong>5 project cards</strong> &mdash; show the color coding (green, yellow, red)</li>
+        <li>Point to <strong>Customer Portal in RED</strong></li>
+      </ul>
+      <div class="say-this">"Notice this one? 35% progress, but 83% of the budget is already spent. That's a problem."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">2</span> Ask Bayan your first question</h3>
+      <div class="type-this">"What's the situation with Customer Portal?"</div>
+      <ul>
+        <li>Let Bayan respond &mdash; it will pull live data from Project Server and give a rich analysis</li>
+      </ul>
+      <div class="say-this">"Notice Bayan didn't just repeat numbers &mdash; it analyzed the burn rate, identified the PM is overloaded, and connected it to 3 active risks."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">3</span> Navigate to Risk Center</h3>
+      <ul>
+        <li>Show the <strong>risk heat map</strong> &mdash; Customer Portal has 3 risks clustered in the high-probability / high-impact zone</li>
+        <li>Point to <strong>Budget Overrun (score: 77, Critical)</strong> and <strong>Timeline Delay (score: 68, Critical)</strong></li>
+        <li>Show the <strong>Monte Carlo simulation</strong></li>
+      </ul>
+      <div class="say-this">"The AI ran 1,000 simulations. Without action, there's an 85% chance of escalation."</div>
+    </div>
+
+    <div class="transition">"So we have a crisis. But a dashboard just shows you the problem. Let me show you how Bayan diagnoses the ROOT CAUSE."</div>
+  </div>
+
+  <!-- ACT 2 -->
+  <div class="act-2">
+    <div class="act-header">
+      <div class="act-number">ACT 2 OF 5</div>
+      <h2>"THE DIAGNOSIS"</h2>
+      <div class="goal">Show AI connecting dots that humans would miss</div>
+      <span class="timing">&#128337; 4 MINUTES</span>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">4</span> Navigate to PM Scoring</h3>
+      <ul>
+        <li>Show the <strong>PM comparison table</strong></li>
+        <li>Point to <strong>Fatima Hassan: Score 73, Workload 95%, Trend DOWN</strong></li>
+        <li>Compare to <strong>Mohammed Ali: Score 90, Workload 60%</strong></li>
+      </ul>
+      <div class="say-this">"Fatima is Customer Portal's PM. She's talented, but she's at 95% capacity and trending down. The AI doesn't just see a red project &mdash; it sees WHY it's red."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">5</span> Navigate to PM Development</h3>
+      <ul>
+        <li>Show <strong>Fatima's skill gaps</strong> &mdash; connects her low score to specific competency areas</li>
+      </ul>
+      <div class="say-this">"This isn't about blaming Fatima. The AI identified she needs support &mdash; specific training areas and possibly a co-PM."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">6</span> Navigate to Executive Predictions</h3>
+      <ul>
+        <li>Show the <strong>AI predictions</strong> for project outcomes</li>
+        <li>Point to Customer Portal's low on-time probability (15%)</li>
+      </ul>
+      <div class="say-this">"Traditional dashboards show you where you ARE. AI tells you where you're GOING."</div>
+    </div>
+
+    <div class="transition">"Now here's where it gets exciting. Bayan doesn't just diagnose &mdash; it recommends and EXECUTES solutions."</div>
+  </div>
+
+  <!-- ACT 3 -->
+  <div class="act-3">
+    <div class="act-header">
+      <div class="act-number">ACT 3 OF 5</div>
+      <h2>"THE SOLUTION"</h2>
+      <div class="goal">Live write-back to Project Server &mdash; the audience gasps</div>
+      <span class="timing">&#128337; 5 MINUTES &bull; &#10024; WOW MOMENT</span>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">7</span> Go back to Portfolio Dashboard</h3>
+      <ul>
+        <li>Open the <strong>What-If Simulator</strong> (if available)</li>
+      </ul>
+      <div class="say-this">"What if we reassigned Mohammed Ali &mdash; our top PM at 60% workload &mdash; to help Customer Portal?"</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">8</span> Ask Bayan the magic question</h3>
+      <div class="type-this">"Assign Mohammed Ali to the Payment Integration task on Customer Portal"</div>
+      <div class="pause">
+        Let the audience see what happens:
+        <ol style="margin-top:8px; padding-left:18px;">
+          <li>Bayan processes the request through GPT-5.2</li>
+          <li>A <strong>confirmation card appears</strong> (amber/blue card with action details)</li>
+          <li>Say: <em>"Notice it's NOT executing automatically. The AI recommends, but the human decides."</em></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">9</span> Click [Confirm] on the action card</h3>
+      <ul>
+        <li>The system sends the request through the <strong>CSOM Bridge</strong> on the Project Server VM</li>
+        <li>It modifies the draft project, assigns the resource, and publishes &mdash; all as ONE queue job</li>
+        <li>Show the <strong>success message</strong></li>
+      </ul>
+      <div class="wow-moment">
+        <div style="font-size:1rem; font-weight:600; color:#4f46e5;">"That just happened LIVE on Microsoft Project Server. Not a simulation. Not a mockup. A real assignment, through a real API, on your real enterprise system."</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">10</span> Quick verification (optional)</h3>
+      <ul>
+        <li>If you have a PWA tab open, switch to it and show the resource now appears in native Project Server</li>
+      </ul>
+      <div class="say-this">"For the skeptics in the room &mdash; here it is in native Project Server."</div>
+    </div>
+
+    <div class="transition">"So we went from crisis detection to solution execution in under 3 minutes. Now let me show you the strategic layer."</div>
+  </div>
+
+  <!-- ACT 4 -->
+  <div class="act-4">
+    <div class="act-header">
+      <div class="act-number">ACT 4 OF 5</div>
+      <h2>"THE VISION"</h2>
+      <div class="goal">Show the strategic value &mdash; this isn't just operational</div>
+      <span class="timing">&#128337; 4 MINUTES</span>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">11</span> Navigate to Strategy &amp; ROI</h3>
+      <ul>
+        <li>Show the <strong>ROI comparison across projects</strong></li>
+        <li>Point to <strong>Data Analytics Platform: 320% ROI, 98% alignment</strong></li>
+      </ul>
+      <div class="say-this">"This is your star project. The AI confirms it's your best investment."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">12</span> Navigate to PMO Performance</h3>
+      <ul>
+        <li>Show cross-project performance metrics</li>
+      </ul>
+      <div class="say-this">"A PMO Director sees everything in one view &mdash; not buried in 5 different MS Project files."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">13</span> Navigate to Documentation</h3>
+      <ul>
+        <li>Select <strong>"Status Report"</strong> and click Generate</li>
+      </ul>
+      <div class="say-this">"Watch this."</div>
+      <ul>
+        <li>The AI generates a <strong>full executive status report</strong> in ~3 seconds</li>
+      </ul>
+      <div class="wow-moment">
+        <div style="font-size:1rem; font-weight:600; color:#4f46e5;">"That report would take a PMO analyst 2-4 hours. Bayan did it in 3 seconds, using live data from Project Server."</div>
+      </div>
+    </div>
+
+    <div class="transition">"Let me bring it all together."</div>
+  </div>
+
+  <!-- ACT 5 -->
+  <div class="act-5">
+    <div class="act-header">
+      <div class="act-number">ACT 5 OF 5</div>
+      <h2>"THE CLOSE"</h2>
+      <div class="goal">Let the AI deliver your closing argument</div>
+      <span class="timing">&#128337; 2 MINUTES</span>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">14</span> Navigate to Strategic Alignment</h3>
+      <ul>
+        <li>Show how projects map to strategic objectives</li>
+      </ul>
+      <div class="say-this">"Every project has a purpose. The AI tracks whether that purpose is being served."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">15</span> The Final Bayan Question</h3>
+      <div class="type-this">"If you were presenting to the steering committee tomorrow, what would be your 3 key messages?"</div>
+      <ul>
+        <li>Let Bayan synthesize everything &mdash; portfolio health, risks, recommendations</li>
+      </ul>
+      <div class="say-this">"That's not a canned response. Bayan just analyzed 5 live projects, 6 risks, 4 PMs, and 4 strategic objectives to give you an executive briefing on demand."</div>
+    </div>
+
+    <div class="step">
+      <h3><span class="step-number">16</span> Closing statement</h3>
+      <div class="wow-moment">
+        <div style="font-size:0.95rem; font-weight:600; color:#4f46e5; line-height:1.7;">"What you just saw is AI that doesn't replace your PMO team &mdash; it makes them 10x more effective. It connects to your existing Microsoft Project Server, it respects your governance (human confirms every action), and it turns data into decisions in seconds, not days."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE SECTION -->
+  <div class="ref-section">
+    <h2>&#127911; Key Phrases to Use</h2>
+    <table class="ref-table">
+      <thead>
+        <tr><th>When</th><th>Say This</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>When data loads</td><td class="phrase">"This is live from Project Server &mdash; not a mockup"</td></tr>
+        <tr><td>When Bayan analyzes</td><td class="phrase">"It's connecting dots across projects, risks, and people"</td></tr>
+        <tr><td>Before clicking Confirm</td><td class="phrase">"AI recommends, humans decide"</td></tr>
+        <tr><td>After write-back succeeds</td><td class="phrase">"That just happened on your real Project Server"</td></tr>
+        <tr><td>After document generates</td><td class="phrase">"3 seconds vs. 4 hours"</td></tr>
+      </tbody>
+    </table>
+
+    <h2>&#128640; Key Data Points</h2>
+    <div class="data-cards">
+      <div class="data-card red">
+        <h4>Customer Portal</h4>
+        <div class="stat" style="color:#dc2626;">RED</div>
+        <p>35% progress, 83% budget spent, 3 critical risks. The crisis project that drives the demo narrative.</p>
+      </div>
+      <div class="data-card yellow">
+        <h4>Fatima Hassan</h4>
+        <div class="stat" style="color:#d97706;">73</div>
+        <p>PM Score 73, 95% workload, 45% attrition risk. The root cause behind the red project.</p>
+      </div>
+      <div class="data-card green">
+        <h4>Mohammed Ali</h4>
+        <div class="stat" style="color:#16a34a;">90</div>
+        <p>PM Score 90, 60% workload. The available solution &mdash; assign him to rescue Customer Portal.</p>
+      </div>
+      <div class="data-card blue">
+        <h4>Data Analytics Platform</h4>
+        <div class="stat" style="color:#2563eb;">320%</div>
+        <p>ROI, 98% alignment. The success story contrast that shows the system works.</p>
+      </div>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip-card dont">
+        <h4>&#10060; Avoid</h4>
+        <ul style="padding-left:16px;">
+          <li>Don't click through pages too fast &mdash; let each insight land</li>
+          <li>Don't read the screen &mdash; tell the STORY behind what they see</li>
+          <li>Don't apologize for loading times &mdash; keep talking</li>
+          <li>Don't demo more than one write-back &mdash; one wow moment is enough</li>
+        </ul>
+      </div>
+      <div class="tip-card do">
+        <h4>&#9989; Do</h4>
+        <ul style="padding-left:16px;">
+          <li>Let Bayan responses load fully before speaking</li>
+          <li>Make eye contact with the audience during loading</li>
+          <li>Pause after the write-back succeeds for effect</li>
+          <li>Have a second browser tab already logged in as backup</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="recovery-card">
+      <h3>&#9888;&#65039; If Something Goes Wrong</h3>
+      <div class="recovery-item">
+        <span class="issue">Bayan gives a short response</span>
+        <span class="fix">Say "Let me rephrase that" and ask a more specific question</span>
+      </div>
+      <div class="recovery-item">
+        <span class="issue">Page loads slowly</span>
+        <span class="fix">Talk about the architecture: "This is calling Project Server's REST API in real-time"</span>
+      </div>
+      <div class="recovery-item">
+        <span class="issue">Write-back fails</span>
+        <span class="fix">Say "This demonstrates governance &mdash; the system validates before executing" and move on</span>
+      </div>
+      <div class="recovery-item">
+        <span class="issue">Login issues</span>
+        <span class="fix">Have a second browser tab already logged in</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    EPM-AI Demo Guide &bull; Bayan AI-Powered Project Intelligence &bull; Macsoft AI &bull; 2026
+  </div>
+
+</div>
+</body>
+</html>

@@ -83,6 +83,7 @@ export default function BayanPanel() {
   const [voiceLang, setVoiceLang] = useState('en-US');
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const textareaRef = useRef(null);
   const prevPathRef = useRef(location.pathname);
   const [initialized, setInitialized] = useState(false);
 
@@ -201,6 +202,24 @@ export default function BayanPanel() {
     ]);
   };
 
+  // Auto-resize textarea
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+  };
+
+  // Reset textarea height after sending
+  const resetTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+    }
+  };
+
   // Send message with page context
   const sendMessage = async (customMessage) => {
     const messageToSend = customMessage || input;
@@ -208,6 +227,7 @@ export default function BayanPanel() {
 
     setMessages(prev => [...prev, { role: 'user', content: messageToSend }]);
     setInput('');
+    resetTextareaHeight();
     setLoading(true);
 
     const newContext = [...conversationContext, { role: 'user', content: messageToSend }].slice(-6);
@@ -354,12 +374,19 @@ export default function BayanPanel() {
         <button onClick={toggleVoice} className={`voice-btn ${isListening ? 'listening' : ''}`}>
           {isListening ? <MicOff size={18} /> : <Mic size={18} />}
         </button>
-        <input
+        <textarea
+          ref={textareaRef}
           value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyPress={e => e.key === 'Enter' && sendMessage()}
+          onChange={handleInputChange}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
           placeholder={voiceLang === 'en-US' ? 'Ask Bayan...' : '...اسأل بيان'}
           dir={voiceLang === 'ar-SA' ? 'rtl' : 'ltr'}
+          rows={1}
         />
         <button onClick={() => sendMessage()} disabled={loading} className="send-btn">
           <Send size={18} />
@@ -649,22 +676,29 @@ export default function BayanPanel() {
           border-top: 1px solid rgba(99, 102, 241, 0.1);
           display: flex;
           gap: 8px;
+          align-items: flex-end;
           background: rgba(255, 255, 255, 0.9);
           backdrop-filter: blur(8px);
         }
 
-        .bayan-input input {
+        .bayan-input textarea {
           flex: 1;
           padding: 10px 12px;
           border: 1px solid rgba(99, 102, 241, 0.15);
           border-radius: 10px;
           font-size: 0.8rem;
           outline: none;
-          transition: all 0.2s;
+          transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
           background: #fafaff;
+          resize: none;
+          overflow-y: auto;
+          min-height: 42px;
+          max-height: 120px;
+          line-height: 1.4;
+          font-family: inherit;
         }
 
-        .bayan-input input:focus {
+        .bayan-input textarea:focus {
           border-color: rgba(99, 102, 241, 0.4);
           background: white;
           box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);

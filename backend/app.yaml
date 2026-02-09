@@ -2,6 +2,13 @@ runtime: nodejs20
 
 env_variables:
   OPENAI_API_KEY: "${OPENAI_API_KEY}"
+  PS_PASSWORD: "${PS_PASSWORD}"
+  PS_URL: "http://34.29.110.174/pwa"
+  PS_USERNAME: "info"
+  PS_DOMAIN: "EPMTRIAL"
+  PS_ENABLED: "true"
+  PS_CACHE_TTL: "300"
+  PS_BRIDGE_URL: "http://34.29.110.174:8080"
 
 automatic_scaling:
   min_instances: 0

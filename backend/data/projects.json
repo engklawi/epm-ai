@@ -4,11 +4,11 @@
     "name": "ERP Modernization",
     "status": "In Progress",
     "health": "yellow",
-    "progress": 65,
+    "progress": 55,
     "budget": 2500000,
     "spent": 1800000,
-    "startDate": "2025-01-15",
-    "endDate": "2026-06-30",
+    "startDate": "2025-07-01",
+    "endDate": "2026-12-31",
     "pmId": "PM001",
     "pmName": "Sarah Ahmed",
     "strategicObjective": "Digital Transformation",
@@ -18,7 +18,7 @@
     "riskScore": 68,
     "aiInsights": {
       "optimizedSchedule": {
-        "suggestedEndDate": "2026-05-15",
+        "suggestedEndDate": "2026-11-15",
         "timelineSavings": "6 weeks",
         "confidence": 78,
         "reasoning": "Parallel workstream execution and resource rebalancing can accelerate delivery"
@@ -55,11 +55,11 @@
     "name": "Cloud Migration",
     "status": "In Progress",
     "health": "green",
-    "progress": 80,
+    "progress": 65,
     "budget": 1800000,
     "spent": 1200000,
-    "startDate": "2025-03-01",
-    "endDate": "2025-12-31",
+    "startDate": "2025-09-01",
+    "endDate": "2026-06-30",
     "pmId": "PM002",
     "pmName": "Mohammed Ali",
     "strategicObjective": "Cost Optimization",
@@ -69,10 +69,10 @@
     "riskScore": 35,
     "aiInsights": {
       "optimizedSchedule": {
-        "suggestedEndDate": "2025-11-30",
+        "suggestedEndDate": "2026-05-31",
         "timelineSavings": "4 weeks",
         "confidence": 85,
-        "reasoning": "Current velocity supports early completion; recommend accelerating for Q4 cost savings"
+        "reasoning": "Current velocity supports early completion; recommend accelerating for Q2 cost savings"
       },
       "suggestedReallocation": [
         { "action": "Lend", "resource": "DevOps Engineer", "to": "Customer Portal", "hours": 10, "impact": "Can spare - automation complete" }
@@ -105,11 +105,11 @@
     "name": "Customer Portal",
     "status": "At Risk",
     "health": "red",
-    "progress": 40,
+    "progress": 35,
     "budget": 900000,
     "spent": 750000,
-    "startDate": "2025-02-01",
-    "endDate": "2025-09-30",
+    "startDate": "2025-08-01",
+    "endDate": "2026-05-31",
     "pmId": "PM003",
     "pmName": "Fatima Hassan",
     "strategicObjective": "Customer Experience",
@@ -119,10 +119,10 @@
     "riskScore": 85,
     "aiInsights": {
       "optimizedSchedule": {
-        "suggestedEndDate": "2025-11-15",
+        "suggestedEndDate": "2026-07-15",
         "timelineSavings": "-6 weeks (extension recommended)",
         "confidence": 72,
-        "reasoning": "Current velocity of 12% monthly cannot meet September deadline; realistic completion November"
+        "reasoning": "Current velocity of 12% monthly cannot meet May deadline; realistic completion mid-July"
       },
       "suggestedReallocation": [
         { "action": "Add", "resource": "Senior Developer", "from": "Cloud Migration", "hours": 30, "impact": "+15% velocity" },
@@ -138,7 +138,7 @@
       "recommendedMethodology": {
         "current": "Waterfall",
         "suggested": "Agile",
-        "reasoning": "Frequent requirement changes (18 CRs) indicate Waterfall is causing 35% rework; Agile recommended",
+        "reasoning": "Frequent requirement changes (18 CRs in 4 months) indicate Waterfall is causing 35% rework; Agile recommended",
         "transitionEffort": "High"
       },
       "predictedCompletion": {
@@ -149,7 +149,7 @@
       "continuationAnalysis": {
         "continueROI": 150,
         "cancelCost": 750000,
-        "pivotOption": "Reduce scope to MVP, deliver core features by deadline",
+        "pivotOption": "Reduce scope to MVP, deliver core features by May deadline",
         "recommendation": "Continue with scope reduction",
         "confidence": 68
       }
@@ -163,11 +163,11 @@
     "name": "Data Analytics Platform",
     "status": "On Track",
     "health": "green",
-    "progress": 55,
+    "progress": 48,
     "budget": 1200000,
     "spent": 600000,
-    "startDate": "2025-04-01",
-    "endDate": "2026-03-31",
+    "startDate": "2025-10-01",
+    "endDate": "2026-09-30",
     "pmId": "PM001",
     "pmName": "Sarah Ahmed",
     "strategicObjective": "Data-Driven Decisions",
@@ -177,7 +177,7 @@
     "riskScore": 25,
     "aiInsights": {
       "optimizedSchedule": {
-        "suggestedEndDate": "2026-02-15",
+        "suggestedEndDate": "2026-08-15",
         "timelineSavings": "6 weeks",
         "confidence": 80,
         "reasoning": "Strong execution velocity; recommend acceleration for earlier business value realization"
@@ -216,11 +216,11 @@
     "name": "Mobile App Revamp",
     "status": "In Progress",
     "health": "yellow",
-    "progress": 70,
+    "progress": 54,
     "budget": 600000,
     "spent": 480000,
-    "startDate": "2025-05-01",
-    "endDate": "2025-11-30",
+    "startDate": "2025-10-01",
+    "endDate": "2026-05-31",
     "pmId": "PM004",
     "pmName": "Ahmed Khalil",
     "strategicObjective": "Customer Experience",
@@ -230,7 +230,7 @@
     "riskScore": 55,
     "aiInsights": {
       "optimizedSchedule": {
-        "suggestedEndDate": "2025-11-15",
+        "suggestedEndDate": "2026-05-15",
         "timelineSavings": "2 weeks",
         "confidence": 75,
         "reasoning": "Integration blockers resolved; slight acceleration possible"
