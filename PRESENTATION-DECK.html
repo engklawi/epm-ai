@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bayan - AI-Powered Project Intelligence</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0f0f1a;
+    color: white;
+    overflow-x: hidden;
+  }
+
+  .slide {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── SLIDE 1: TITLE ── */
+  .slide-title {
+    background: linear-gradient(135deg, #0f0a2e 0%, #1a1145 40%, #2d1b69 100%);
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide-title::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    left: -20%;
+    width: 140%;
+    height: 160%;
+    background:
+      radial-gradient(circle at 25% 35%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 75% 65%, rgba(139, 92, 246, 0.1) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .title-content { position: relative; z-index: 1; }
+
+  .title-badge {
+    display: inline-block;
+    padding: 8px 24px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: #a5b4fc;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+  }
+
+  .title-main {
+    font-size: 4.5rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 50%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .title-sub {
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 700px;
+    margin: 0 auto 50px;
+    line-height: 1.6;
+  }
+
+  .title-meta {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .title-meta span { display: flex; align-items: center; gap: 8px; }
+  .title-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; }
+
+  /* ── SLIDE 2: THE PROBLEM ── */
+  .slide-problem {
+    background: linear-gradient(135deg, #1a0a0a 0%, #2a0f0f 50%, #1a0a0a 100%);
+  }
+
+  .slide-problem::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .slide-number {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 16px;
+  }
+
+  .slide-heading {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 50px;
+    line-height: 1.15;
+  }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .problem-card {
+    padding: 32px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s;
+  }
+
+  .problem-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(239, 68, 68, 0.2);
+  }
+
+  .problem-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+  }
+
+  .problem-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fca5a5;
+  }
+
+  .problem-card p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.6;
+  }
+
+  .problem-stat {
+    margin-top: 12px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ef4444;
+  }
+
+  .problem-stat-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.35);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── SLIDE 3: VISION ── */
+  .slide-vision {
+    background: linear-gradient(135deg, #0a0f1a 0%, #0f1a2e 50%, #0a1628 100%);
+    text-align: center;
+    align-items: center;
+  }
+
+  .slide-vision::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .vision-statement {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .vision-statement .highlight {
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .vision-sub {
+    margin-top: 32px;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.45);
+    max-width: 600px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SLIDE 4: HOW IT WORKS ── */
+  .slide-how {
+    background: linear-gradient(135deg, #0f0a2e 0%, #0a1628 100%);
+  }
+
+  .flow-container {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .flow-step {
+    flex: 1;
+    padding: 32px 24px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    position: relative;
+  }
+
+  .flow-step::after {
+    content: '\2192';
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: rgba(99, 102, 241, 0.4);
+    z-index: 2;
+  }
+
+  .flow-step:last-child::after { display: none; }
+
+  .flow-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin: 0 auto 16px;
+  }
+
+  .flow-step h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #c7d2fe;
+  }
+
+  .flow-step p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+    line-height: 1.5;
+  }
+
+  .flow-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  /* ── SLIDE 5: USE CASES ── */
+  .slide-usecases {
+    background: linear-gradient(135deg, #0a1628 0%, #0f0a2e 100%);
+  }
+
+  .uc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .uc-card {
+    padding: 24px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s;
+  }
+
+  .uc-card:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: rgba(99, 102, 241, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .uc-card .uc-icon {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+
+  .uc-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #e0e7ff;
+  }
+
+  .uc-card p {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.5;
+  }
+
+  /* ── SLIDE 6: LIVE DEMO NARRATIVE ── */
+  .slide-narrative {
+    background: linear-gradient(135deg, #0f0a2e 0%, #1a1145 100%);
+  }
+
+  .narrative-flow {
+    display: flex;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .narrative-step {
+    flex: 1;
+    padding: 28px 20px;
+    position: relative;
+    text-align: center;
+  }
+
+  .narrative-step::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+    z-index: 0;
+  }
+
+  .narrative-step:last-child::before { display: none; }
+
+  .narrative-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    margin: 0 auto 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .narrative-step:nth-child(1) .narrative-dot { background: #ef4444; }
+  .narrative-step:nth-child(2) .narrative-dot { background: #f59e0b; }
+  .narrative-step:nth-child(3) .narrative-dot { background: #6366f1; }
+  .narrative-step:nth-child(4) .narrative-dot { background: #22c55e; }
+  .narrative-step:nth-child(5) .narrative-dot { background: #8b5cf6; }
+
+  .narrative-step h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #e0e7ff;
+  }
+
+  .narrative-step p {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.5;
+  }
+
+  .narrative-quote {
+    margin-top: 40px;
+    padding: 28px 36px;
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .narrative-quote p {
+    font-size: 1rem;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .narrative-quote .attr {
+    margin-top: 12px;
+    font-size: 0.75rem;
+    font-style: normal;
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  /* ── SLIDE 7: UNIQUE VALUE ── */
+  .slide-value {
+    background: linear-gradient(135deg, #0a1628 0%, #0f1a2e 100%);
+  }
+
+  .value-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .value-card {
+    padding: 28px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(139, 92, 246, 0.03));
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .value-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, #6366f1, #a78bfa);
+  }
+
+  .value-card .v-icon {
+    font-size: 1.8rem;
+    margin-bottom: 14px;
+  }
+
+  .value-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #c7d2fe;
+  }
+
+  .value-card p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+    line-height: 1.6;
+  }
+
+  /* ── SLIDE 8: IMPACT ── */
+  .slide-impact {
+    background: linear-gradient(135deg, #0f1a2e 0%, #0a0f1a 100%);
+  }
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .impact-card {
+    padding: 32px 24px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+  }
+
+  .impact-number {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .impact-label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .impact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .impact-before, .impact-after {
+    padding: 28px;
+    border-radius: 16px;
+  }
+
+  .impact-before {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+  }
+
+  .impact-after {
+    background: rgba(34, 197, 94, 0.06);
+    border: 1px solid rgba(34, 197, 94, 0.15);
+  }
+
+  .impact-before h3 { color: #fca5a5; font-size: 1rem; margin-bottom: 14px; }
+  .impact-after h3 { color: #86efac; font-size: 1rem; margin-bottom: 14px; }
+
+  .impact-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .impact-list li {
+    padding: 6px 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .impact-list li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .impact-before .impact-list li::before { background: #ef4444; }
+  .impact-after .impact-list li::before { background: #22c55e; }
+
+  /* ── SLIDE 9: CLOSE ── */
+  .slide-close {
+    background: linear-gradient(135deg, #0f0a2e 0%, #1a1145 40%, #2d1b69 100%);
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide-close::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(99, 102, 241, 0.12) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .close-heading {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .close-sub {
+    font-size: 1.3rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 50px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .close-cta {
+    display: inline-block;
+    padding: 16px 48px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.4);
+  }
+
+  .close-info {
+    margin-top: 40px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── UTILITIES ── */
+  .accent { color: #6366f1; }
+  .red-accent { color: #ef4444; }
+  .green-accent { color: #22c55e; }
+  .gold-accent { color: #f59e0b; }
+
+  .divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #a78bfa);
+    border-radius: 2px;
+    margin: 20px 0 30px;
+  }
+
+  .center-divider {
+    margin: 20px auto 30px;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .slide { page-break-after: always; height: 100vh; min-height: unset; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 1: TITLE                         -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-title">
+  <div class="title-content">
+    <div class="title-badge">AI-Powered Project Intelligence</div>
+    <h1 class="title-main">Bayan<br><span style="font-size:0.5em; font-weight:300; letter-spacing:0.05em;">بيان</span></h1>
+    <p class="title-sub">Transforming enterprise project data into executive intelligence.<br>From insight to action in seconds — not days.</p>
+    <div class="title-meta">
+      <span><span class="dot"></span> Live Microsoft Project Server Integration</span>
+      <span><span class="dot"></span> AI-Powered Decision Engine</span>
+      <span><span class="dot"></span> Real-Time Write-Back Capability</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 2: THE PROBLEM                   -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-problem">
+  <div style="position:relative; z-index:1;">
+    <div class="slide-number">01 / The Challenge</div>
+    <h2 class="slide-heading">PMOs are drowning in data,<br>but starving for <span class="red-accent">insight</span>.</h2>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">&#128200;</div>
+        <h3>Fragmented Data</h3>
+        <p>Project data in MS Project, risks in spreadsheets, PM reviews in documents, strategy in presentations. No unified view exists.</p>
+        <div class="problem-stat">5+</div>
+        <div class="problem-stat-label">Disconnected systems per portfolio</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">&#9200;</div>
+        <h3>Reactive Management</h3>
+        <p>By the time a project turns "RED" in a monthly review, the damage is already done. Millions lost to late detection.</p>
+        <div class="problem-stat">4-6 wks</div>
+        <div class="problem-stat-label">Average delay in problem detection</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">&#128221;</div>
+        <h3>Reporting Burden</h3>
+        <p>PMO analysts spend 60% of their time compiling reports instead of managing projects. Status reports take hours to write.</p>
+        <div class="problem-stat">2-4 hrs</div>
+        <div class="problem-stat-label">Per status report, per project, per week</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">&#128683;</div>
+        <h3>Action Bottleneck</h3>
+        <p>Even after identifying a problem, executing the fix requires navigating Project Server, finding the right screen, and making changes manually.</p>
+        <div class="problem-stat">Days</div>
+        <div class="problem-stat-label">From decision to execution</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 3: THE VISION                    -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-vision">
+  <div class="slide-number">02 / The Vision</div>
+  <div class="divider center-divider"></div>
+  <h2 class="vision-statement">
+    What if your <span class="highlight">AI PMO Director</span><br>
+    could see every project, every risk, every PM —<br>
+    and take <span class="highlight">action</span> in seconds?
+  </h2>
+  <p class="vision-sub">
+    Bayan connects directly to Microsoft Project Server, analyzes your entire portfolio in real-time, and doesn't just report problems — it <strong style="color: #a5b4fc;">diagnoses root causes and executes solutions</strong> with your approval.
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 4: HOW IT WORKS                  -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-how">
+  <div style="position:relative; z-index:1;">
+    <div class="slide-number">03 / How It Works</div>
+    <h2 class="slide-heading">From data to decision<br>in <span class="accent">three layers</span>.</h2>
+    <div class="flow-container">
+      <div class="flow-step">
+        <div class="flow-icon">&#128640;</div>
+        <div class="flow-num">1</div>
+        <h3>Live Data Ingestion</h3>
+        <p>Bayan connects to your existing Microsoft Project Server via REST API. All project data — tasks, schedules, resources, progress — flows in real-time. No migration, no new tools.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-icon">&#129504;</div>
+        <div class="flow-num">2</div>
+        <h3>AI Intelligence Layer</h3>
+        <p>GPT-5.2 analyzes the portfolio data combined with risk assessments, PM scores, and strategic objectives. It detects patterns, predicts outcomes, and runs Monte Carlo simulations.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-icon">&#9889;</div>
+        <div class="flow-num">3</div>
+        <h3>Action Execution</h3>
+        <p>Bayan doesn't just recommend — it proposes specific actions (reassign resources, update progress). You confirm with one click. The change is written back to Project Server instantly.</p>
+      </div>
+    </div>
+    <div style="margin-top:30px; text-align:center; position:relative; z-index:1;">
+      <div style="display:inline-block; padding:14px 28px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.15); border-radius:12px; font-size:0.85rem; color:#a5b4fc;">
+        &#128274;&nbsp; <strong>Human-in-the-Loop Governance:</strong>&ensp;AI recommends, humans decide. Every action requires explicit confirmation.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 5: 9 USE CASES                   -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-usecases">
+  <div style="position:relative; z-index:1;">
+    <div class="slide-number">04 / Capabilities</div>
+    <h2 class="slide-heading" style="margin-bottom:30px;">Nine integrated use cases.<br><span class="accent">One intelligent platform.</span></h2>
+    <div class="uc-grid">
+      <div class="uc-card">
+        <div class="uc-icon">&#128172;</div>
+        <h3>AI PMO Director</h3>
+        <p>Persistent AI assistant that analyzes, recommends, and executes actions through natural conversation</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#128202;</div>
+        <h3>Portfolio Dashboard</h3>
+        <p>Executive overview with health indicators, budget tracking, AI summary, and What-If Simulator</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#127919;</div>
+        <h3>Strategy & ROI</h3>
+        <p>Strategic alignment scoring and ROI comparison across the entire portfolio</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#128200;</div>
+        <h3>PMO Performance</h3>
+        <p>Cross-project delivery metrics, budget accuracy, and resource utilization</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#9888;&#65039;</div>
+        <h3>Risk Center</h3>
+        <p>AI-predicted risks with Monte Carlo simulation, pattern matching, and mitigation success rates</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#128196;</div>
+        <h3>Document Generation</h3>
+        <p>AI generates status reports, project charters, and meeting minutes in 3 seconds</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#128302;</div>
+        <h3>Executive Predictions</h3>
+        <p>Budget overrun probability, on-time forecasting, and scenario analysis</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#11088;</div>
+        <h3>PM Scoring</h3>
+        <p>Data-driven PM performance leaderboard with competency radar and trend tracking</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#127891;</div>
+        <h3>PM Development</h3>
+        <p>AI-recommended training, mentorship pairing, and skill gap analysis per PM</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 6: LIVE SCENARIO                 -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-narrative">
+  <div style="position:relative; z-index:1;">
+    <div class="slide-number">05 / The Experience</div>
+    <h2 class="slide-heading" style="margin-bottom:30px;">A real scenario:<br>Crisis to resolution in <span class="accent">3 minutes</span>.</h2>
+    <div class="narrative-flow">
+      <div class="narrative-step">
+        <div class="narrative-dot">1</div>
+        <h4>Detect</h4>
+        <p>Dashboard shows Customer Portal in RED — 35% progress, 83% budget burned, 3 critical risks</p>
+      </div>
+      <div class="narrative-step">
+        <div class="narrative-dot">2</div>
+        <h4>Diagnose</h4>
+        <p>Bayan identifies root cause: PM Fatima Hassan at 95% workload, score declining, creating a cascade of risks</p>
+      </div>
+      <div class="narrative-step">
+        <div class="narrative-dot">3</div>
+        <h4>Recommend</h4>
+        <p>AI proposes: assign Mohammed Ali (score 90, 60% workload) to the critical task via action card</p>
+      </div>
+      <div class="narrative-step">
+        <div class="narrative-dot">4</div>
+        <h4>Execute</h4>
+        <p>One click to confirm. Bayan writes the assignment directly to Microsoft Project Server. Live. Real.</p>
+      </div>
+      <div class="narrative-step">
+        <div class="narrative-dot">5</div>
+        <h4>Report</h4>
+        <p>AI generates an executive status report in 3 seconds, synthesizes the portfolio for steering committee</p>
+      </div>
+    </div>
+    <div class="narrative-quote">
+      <p>"That just happened LIVE on Microsoft Project Server. Not a simulation. Not a mockup. A real assignment, through a real API, on your real enterprise system."</p>
+      <p class="attr">— Live Demo Moment</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 7: UNIQUE VALUE                  -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-value">
+  <div style="position:relative; z-index:1;">
+    <div class="slide-number">06 / Unique Added Value</div>
+    <h2 class="slide-heading" style="margin-bottom:30px;">Not another dashboard.<br><span class="accent">An intelligent partner.</span></h2>
+    <div class="value-grid">
+      <div class="value-card">
+        <div class="v-icon">&#128279;</div>
+        <h3>Live Integration</h3>
+        <p>Connected to your existing Microsoft Project Server. No migration, no data duplication. Your single source of truth, enhanced with AI.</p>
+      </div>
+      <div class="value-card">
+        <div class="v-icon">&#9997;&#65039;</div>
+        <h3>AI Write-Back</h3>
+        <p>The only solution where AI can execute changes on Project Server through natural language. "Assign Mohammed Ali to Customer Portal" — done.</p>
+      </div>
+      <div class="value-card">
+        <div class="v-icon">&#128101;</div>
+        <h3>Human-in-the-Loop</h3>
+        <p>AI recommends, humans decide. Every action requires explicit confirmation. Full governance, zero risk of unauthorized changes.</p>
+      </div>
+      <div class="value-card">
+        <div class="v-icon">&#128302;</div>
+        <h3>Predictive, Not Reactive</h3>
+        <p>Monte Carlo simulations, risk pattern matching, and outcome forecasting. Know what will happen before it happens.</p>
+      </div>
+      <div class="value-card">
+        <div class="v-icon">&#129504;</div>
+        <h3>Systems Thinking</h3>
+        <p>Bayan connects dots humans miss: PM workload causing project delays causing risk escalation. One insight, three dimensions.</p>
+      </div>
+      <div class="value-card">
+        <div class="v-icon">&#128337;</div>
+        <h3>3-Second Reports</h3>
+        <p>AI generates executive-quality status reports, project charters, and meeting minutes using live data. Hours of work in seconds.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 8: IMPACT METRICS                -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-impact">
+  <div style="position:relative; z-index:1;">
+    <div class="slide-number">07 / Expected Impact</div>
+    <h2 class="slide-heading" style="margin-bottom:30px;">Measurable transformation.</h2>
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-number">90%</div>
+        <div class="impact-label">Reduction in<br>reporting time</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-number">4-6x</div>
+        <div class="impact-label">Faster risk<br>detection</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-number">100%</div>
+        <div class="impact-label">Portfolio visibility<br>in one view</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-number">&lt;3s</div>
+        <div class="impact-label">Decision to<br>execution</div>
+      </div>
+    </div>
+    <div class="impact-row">
+      <div class="impact-before">
+        <h3>&#10060;&ensp;Without Bayan</h3>
+        <ul class="impact-list">
+          <li>Problems discovered at monthly reviews</li>
+          <li>Manual report compilation takes hours</li>
+          <li>PM workload imbalances go unnoticed</li>
+          <li>Risk mitigation is reactive and slow</li>
+          <li>Data scattered across 5+ systems</li>
+        </ul>
+      </div>
+      <div class="impact-after">
+        <h3>&#9989;&ensp;With Bayan</h3>
+        <ul class="impact-list">
+          <li>Real-time alerts as issues emerge</li>
+          <li>AI-generated reports in 3 seconds</li>
+          <li>AI detects overload and recommends rebalancing</li>
+          <li>Predictive risk analysis with Monte Carlo simulation</li>
+          <li>Unified intelligence layer on existing infrastructure</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SLIDE 9: CLOSE / CTA                   -->
+<!-- ═══════════════════════════════════════ -->
+<div class="slide slide-close">
+  <div class="slide-number">08 / Next Steps</div>
+  <div class="divider center-divider"></div>
+  <h2 class="close-heading">From data to decisions.<br>In seconds, not days.</h2>
+  <p class="close-sub">AI that doesn't replace your PMO team — it makes them 10x more effective.</p>
+  <a href="https://bayan-dga.macsoft.ai/" class="close-cta">See Bayan Live &nbsp;&#8594;</a>
+  <div class="close-info">
+    <p style="margin-bottom:8px;">Bayan connects to your existing Microsoft Project Server.</p>
+    <p>No migration required. Deploy in weeks, not months.</p>
+    <p style="margin-top:24px; color:rgba(255,255,255,0.2);">Macsoft AI &nbsp;&bull;&nbsp; 2026</p>
+  </div>
+</div>
+
+</body>
+</html>
