@@ -1,5 +1,87 @@
 # EPM-AI Progress Log
 
+## Session: 2026-02-17 — Bridge Stability, Demo Reset Script, CICOCheckedOut Fix
+
+### Completed Work
+
+#### 20. CICOCheckedOutInOtherSession Fix ✅
+- **Problem:** Bayan chat assignments failed with `CICOCheckedOutInOtherSession` when projects were left checked out from previous failed operations
+- **Root Cause:** Project Server leaves projects in checked-out state after failed CSOM operations. New checkout attempts fail.
+- **CSOM ForceCheckIn() didn't work** — tried 3 CSOM approaches, all failed
+- **Solution:** REST API `POST /_api/ProjectServer/Projects('{guid}')/Draft/CheckIn(force=true)` with X-RequestDigest — works reliably
+- **bridge-server.js updated:**
+  - Added `psRestCall()` function using PowerShell `Invoke-RestMethod` with `-EncodedCommand` (avoids special char issues in password)
+  - Added `forceCheckInProject()` and `forceCheckInAllProjects()` functions
+  - `/api/assign` now auto-detects `CICOCheckedOutInOtherSession` and retries after force check-in
+  - Added `POST /api/force-checkin` endpoint
+  - Added uncaught exception/rejection handlers (prevents silent crashes)
+  - Added memory monitoring (logs RSS/heap every 30 minutes)
+  - Added keepAliveTimeout (120s) and headersTimeout (130s)
+
+#### 21. Bridge Server Stability Improvements ✅
+- **Critical bug fixed:** `start-bridge.bat` had `PWA_URL=http://localhost/pwa` — IIS doesn't bind to localhost, only `10.128.0.2:80` and `34.29.110.174:80`
+- **Updated `setup-bridge.ps1`:**
+  - Fixed `PWA_URL` to `http://34.29.110.174/pwa`
+  - Changed RestartCount from 3 to 999 with 1-min interval
+  - Added `NODE_OPTIONS=--max-old-space-size=512`
+  - Added log rotation (archives bridge.log at >10MB)
+  - Added `watchdog.ps1` creation (health check every 5 min, auto-restart)
+  - Added `PSBridgeWatchdog` scheduled task registration
+- **Created `deploy-update-startup.ps1`:**
+  - VM metadata startup script for deploying all bridge updates on boot/reset
+  - Inlines full `bridge-server.js` content (no placeholder)
+  - Writes `start-bridge.bat`, `watchdog.ps1`, registers watchdog task
+  - Updates `PSBridgeServer` task settings (999 restarts, 365-day limit)
+- **VM startup architecture:**
+  - PS startup script (`windows-startup-script-ps1`): writes all files, kills old bridge
+  - CMD startup script (`windows-startup-script-cmd`): starts bridge via bat file with correct env vars
+  - Old broken CMD script removed (was starting node without `PWA_URL` env var)
+
+#### 22. Demo Reset Script (`reset-demo.sh`) ✅
+- **Created `/reset-demo.sh`** — resets all Project Server data to baseline after each demo
+- **Three modes:**
+  - `./reset-demo.sh` — Full reset (check-in + remove extra assignments + reset task progress)
+  - `./reset-demo.sh --check` — View current state (no changes)
+  - `./reset-demo.sh --checkin` — Only force check-in all projects
+- **Features:**
+  - Force check-in all 5 projects via REST API
+  - Detect and remove non-baseline assignments by comparing GUID prefixes
+  - Reset all 37 task progress values to original percentages
+  - Visual progress bars in `--check` mode
+  - macOS bash 3.2 compatible (uses Python for data structures)
+- **Baseline data hardcoded:**
+  - 37 baseline assignment ID prefixes
+  - Task progress: Cloud Migration (100/100/100/90/60/40/30/5%), Customer Portal (100/60/50/10/0/0/0%), etc.
+  - Expected assignment counts: Cloud Migration=8, Customer Portal=7, Data Analytics=7, ERP=8, Mobile App=7
+
+#### 23. Simplified `Invoke-PSAssignment.ps1` ✅
+- Removed complex CSOM force check-in logic (now handled by bridge-server.js via REST)
+- Simplified to just: CheckOut → Add assignments → Publish
+- Error handling: catch block still tries to check in on failure
+
+### Deployment Steps Used
+```bash
+# 1. Update VM startup scripts
+gcloud compute instances add-metadata epm-trial-server --zone=us-central1-a \
+  --metadata-from-file=windows-startup-script-ps1=backend/ps-bridge/deploy-update-startup.ps1 \
+  --project=epm-ai-demo-20260201
+
+# 2. Set CMD startup (starts bridge with correct env vars)
+gcloud compute instances add-metadata epm-trial-server --zone=us-central1-a \
+  --metadata-from-file=windows-startup-script-cmd=/tmp/vm-startup.cmd \
+  --project=epm-ai-demo-20260201
+
+# 3. Reset VM to trigger both startup scripts
+gcloud compute instances reset epm-trial-server --zone=us-central1-a --project=epm-ai-demo-20260201
+```
+
+### Demo Workflow
+1. Run demo (Bayan assigns resources, updates tasks)
+2. After demo: `./reset-demo.sh` — resets everything to baseline (~30 seconds)
+3. Verify: `./reset-demo.sh --check` — visual confirmation all at baseline
+
+---
+
 ## Session: 2026-02-05 — Major UX Redesign & Simplification
 
 ### Completed Work

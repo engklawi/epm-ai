@@ -108,6 +108,10 @@ try {
         $resourceLookup = @{}
         foreach ($r in $ctx.EnterpriseResources) { $resourceLookup[$r.Name] = $r.Id }
 
+        # Note: Force check-in is handled by the bridge server (bridge-server.js)
+        # via REST API before calling this script. If CICOCheckedOutInOtherSession
+        # still occurs, the bridge will auto-retry after force check-in.
+
         # Checkout
         $draft = $project.CheckOut()
         $ctx.Load($draft)

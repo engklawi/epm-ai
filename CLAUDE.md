@@ -82,6 +82,7 @@ Project Server's queue uses **correlation-based job grouping** (correlation ID =
 ```
 EPM-AI/
 ├── start.sh                   # One-command startup script
+├── reset-demo.sh              # Demo reset (resets PS data to baseline after each demo)
 ├── backend/
 │   ├── server.js              # Main Express API (GPT-5.2 + Bayan persona + function calling + PS write-back)
 │   ├── authMiddleware.js      # Firebase Auth token verification + email whitelist
@@ -95,9 +96,10 @@ EPM-AI/
 │   │   ├── projectManagers.json # 4 PMs
 │   │   └── strategicObjectives.json # 4 strategic objectives
 │   ├── ps-bridge/             # CSOM Bridge Server (deployed to VM)
-│   │   ├── bridge-server.js   # Express server (port 8080) — spawns PowerShell
+│   │   ├── bridge-server.js   # Express server (port 8080) — spawns PowerShell + auto-retry force check-in
 │   │   ├── Invoke-PSAssignment.ps1  # CSOM script for resource assignments
-│   │   ├── setup-bridge.ps1   # One-time setup script for VM
+│   │   ├── setup-bridge.ps1   # One-time setup script for VM (watchdog, restarts, log rotation)
+│   │   ├── deploy-update-startup.ps1  # VM startup script (deploys all bridge files on boot)
 │   │   └── deploy-to-vm.sh    # Deployment helper
 │   └── scripts/               # Utility scripts (upload, test, debug)
 │       ├── upload-to-project-server.js  # Main data upload (7-step process)
@@ -265,19 +267,49 @@ gcloud app deploy --project=$PROJECT_ID --quiet
 # Check VM status
 gcloud compute instances describe epm-trial-server --zone=us-central1-a --format="get(status)"
 
-# Reset VM (triggers startup script)
+# Reset VM (triggers startup scripts: PS deploys files, CMD starts bridge)
 gcloud compute instances reset epm-trial-server --zone=us-central1-a --quiet
 
-# View serial console output
+# View serial console output (check startup script results)
 gcloud compute instances get-serial-port-output epm-trial-server --zone=us-central1-a
 
-# Update startup script
+# Update PS startup script (deploys bridge files)
 gcloud compute instances add-metadata epm-trial-server --zone=us-central1-a \
-  --metadata-from-file=windows-startup-script-ps1=/path/to/script.ps1
+  --metadata-from-file=windows-startup-script-ps1=backend/ps-bridge/deploy-update-startup.ps1
 
 # Check bridge health
 curl http://34.29.110.174:8080/health
+
+# Force check-in all projects (clears stuck checkouts)
+curl -X POST http://34.29.110.174:8080/api/force-checkin
 ```
+
+### VM Startup Architecture
+The VM uses **two** startup scripts that run in sequence on boot/reset:
+1. **`windows-startup-script-ps1`** (PowerShell): Kills old bridge process, writes `bridge-server.js`, `start-bridge.bat`, `watchdog.ps1`, registers watchdog task, updates restart settings
+2. **`windows-startup-script-cmd`** (CMD): Sets env vars (`PWA_URL`, `PS_PASSWORD`, etc.) and starts `node bridge-server.js`
+
+**IMPORTANT:** The CMD script must set `PWA_URL=http://34.29.110.174/pwa` — IIS doesn't bind to `localhost:80`.
+
+### Bridge Stability Features
+- **Auto-restart:** PSBridgeServer scheduled task with 999 restarts, 1-min interval
+- **Watchdog:** PSBridgeWatchdog task checks health every 5 min, restarts if down
+- **Log rotation:** bridge.log archived at >10MB
+- **Memory monitoring:** Logs RSS/heap every 30 minutes
+- **Crash handlers:** uncaughtException and unhandledRejection handlers prevent silent crashes
+
+## Demo Reset
+```bash
+# After each demo — reset all data to baseline (~30 seconds)
+./reset-demo.sh
+
+# View current state without making changes
+./reset-demo.sh --check
+
+# Only force check-in all projects (clears stuck locks)
+./reset-demo.sh --checkin
+```
+The reset script: force checks in all projects → removes non-baseline assignments → resets task progress to original percentages.
 
 ---
 
@@ -316,6 +348,22 @@ cd frontend && npx playwright test --reporter=list
 - **Problem:** REST API `Assignments/Add` + `Publish` create separate queue jobs that block each other
 - **Solution:** Use CSOM via PS Bridge Server — batches all changes into one `Publish()` queue job
 - **Proven:** CSOM assignment `Result: Success` confirmed on 2026-02-04
+
+### CICOCheckedOutInOtherSession
+- **Problem:** Projects left in checked-out state after failed operations prevent new checkouts
+- **CSOM ForceCheckIn() doesn't work** — tried multiple approaches
+- **Solution:** REST API `POST /_api/ProjectServer/Projects('{guid}')/Draft/CheckIn(force=true)` with X-RequestDigest
+- **Auto-retry:** bridge-server.js detects this error on `/api/assign` and auto-retries after REST force check-in
+- **Manual fix:** `curl -X POST http://34.29.110.174:8080/api/force-checkin` or `./reset-demo.sh --checkin`
+
+### Bridge Server PWA_URL
+- **Problem:** `PWA_URL=http://localhost/pwa` doesn't work because IIS binds to IP addresses, not localhost
+- **Solution:** Always use `PWA_URL=http://34.29.110.174/pwa` in start-bridge.bat and env vars
+- **The CMD startup script** (`windows-startup-script-cmd`) sets this correctly
+
+### PowerShell Password Special Characters
+- **Problem:** Password `rXr<{=eiKQ,49+V` contains `<` which breaks PowerShell `-Command` inline parsing
+- **Solution:** Use `-EncodedCommand` (Base64 UTF-16LE) instead of `-Command` for PowerShell REST calls in bridge-server.js
 
 ### IIS Port 80 Binding Conflict
 - **Problem:** Multiple IIS sites (PWA, Default, Central Admin) all bound to `*:80`

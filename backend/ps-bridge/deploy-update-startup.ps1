@@ -1,3 +1,43 @@
+# Windows Startup Script — Deploys all updated bridge files and restarts
+# Set as VM metadata: windows-startup-script-ps1
+# Runs on every boot/reset
+
+$ErrorActionPreference = "Continue"
+$bridgeDir = "C:\ps-bridge"
+$logFile = "$bridgeDir\deploy-update.log"
+
+function Log($msg) {
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$ts  $msg" | Tee-Object -FilePath $logFile -Append
+}
+
+# Ensure dir exists
+if (-not (Test-Path $bridgeDir)) {
+    New-Item -ItemType Directory -Path $bridgeDir -Force | Out-Null
+}
+
+Log "=== Deploy Update Startup Script ==="
+Log "Deploying updated bridge files..."
+
+# Kill any bridge processes so we can write fresh files
+# The CMD startup script (windows-startup-script-cmd) will restart it after this PS script completes
+Get-Process -Name "node" -ErrorAction SilentlyContinue | ForEach-Object {
+    $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)" -ErrorAction SilentlyContinue).CommandLine
+    if ($cmd -match "bridge-server") {
+        Log "  Killing bridge process (PID: $($_.Id)) for update..."
+        Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+    }
+}
+Start-Sleep -Seconds 2
+
+# ────────────────────────────────────────────────
+# 1. Write bridge-server.js
+# ────────────────────────────────────────────────
+Log "Writing bridge-server.js..."
+# We download from the repo or use inline content
+# For reliability, inline the critical file content here
+
+$bridgeJs = @'
 /**
  * PS Bridge Server — Runs on the Project Server VM (Windows)
  *
@@ -335,3 +375,127 @@ const server = app.listen(PORT, () => {
 // Keep-alive settings to prevent idle connection timeouts
 server.keepAliveTimeout = 120000; // 2 minutes
 server.headersTimeout = 130000;
+'@
+
+# Only write if we have actual content (not placeholder)
+if ($bridgeJs -notmatch "PLACEHOLDER") {
+    Set-Content -Path "$bridgeDir\bridge-server.js" -Value $bridgeJs -Encoding UTF8
+    Log "  bridge-server.js updated"
+}
+
+# ────────────────────────────────────────────────
+# 2. Write start-bridge.bat (FIXED: use IP-based PWA_URL)
+# ────────────────────────────────────────────────
+Log "Writing start-bridge.bat..."
+$batchContent = @"
+@echo off
+cd /d C:\ps-bridge
+set PS_PASSWORD=rXr<{=eiKQ,49+V
+set PWA_URL=http://34.29.110.174/pwa
+set PS_USERNAME=info
+set PS_DOMAIN=EPMTRIAL
+set NODE_OPTIONS=--max-old-space-size=512
+
+REM Log rotation: archive if > 10MB
+for %%%%F in (bridge.log) do if %%%%~zF GTR 10485760 (
+    move /y bridge.log bridge.log.old
+)
+
+node bridge-server.js >> C:\ps-bridge\bridge.log 2>&1
+"@
+Set-Content -Path "$bridgeDir\start-bridge.bat" -Value $batchContent -Encoding ASCII
+Log "  start-bridge.bat updated (PWA_URL = http://34.29.110.174/pwa)"
+
+# ────────────────────────────────────────────────
+# 3. Write watchdog.ps1
+# ────────────────────────────────────────────────
+Log "Writing watchdog.ps1..."
+$watchdog = @'
+# PS Bridge Watchdog - checks health every 5 minutes, restarts if down
+$logFile = "C:\ps-bridge\watchdog.log"
+$maxLogSize = 5MB
+
+if (Test-Path $logFile) {
+    if ((Get-Item $logFile).Length -gt $maxLogSize) {
+        Move-Item -Path $logFile -Destination "$logFile.old" -Force
+    }
+}
+
+function Log($msg) {
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$ts  $msg" | Out-File -FilePath $logFile -Append
+}
+
+try {
+    $response = Invoke-WebRequest -Uri "http://localhost:8080/health" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $health = $response.Content | ConvertFrom-Json
+    if ($health.status -eq "ok") { exit 0 }
+} catch {
+    Log "Bridge DOWN - restarting... ($($_.Exception.Message))"
+    Get-Process -Name "node" -ErrorAction SilentlyContinue | ForEach-Object {
+        $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)" -ErrorAction SilentlyContinue).CommandLine
+        if ($cmd -match "bridge-server") {
+            Log "  Killing stuck node (PID: $($_.Id))"
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+    Start-Sleep -Seconds 3
+    $task = Get-ScheduledTask -TaskName "PSBridgeServer" -ErrorAction SilentlyContinue
+    if ($task) {
+        if ($task.State -eq "Running") { Stop-ScheduledTask -TaskName "PSBridgeServer" -ErrorAction SilentlyContinue; Start-Sleep 2 }
+        Start-ScheduledTask -TaskName "PSBridgeServer"
+        Log "  Restarted PSBridgeServer"
+    } else {
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c C:\ps-bridge\start-bridge.bat" -WindowStyle Hidden
+        Log "  Started bridge directly"
+    }
+    Start-Sleep -Seconds 10
+    try {
+        $v = Invoke-WebRequest -Uri "http://localhost:8080/health" -UseBasicParsing -TimeoutSec 10
+        Log "  Bridge recovered!"
+    } catch {
+        Log "  WARNING: Bridge still down after restart"
+    }
+}
+'@
+Set-Content -Path "$bridgeDir\watchdog.ps1" -Value $watchdog -Encoding UTF8
+Log "  watchdog.ps1 created"
+
+# ────────────────────────────────────────────────
+# 4. Register watchdog scheduled task (every 5 min)
+# ────────────────────────────────────────────────
+Log "Registering watchdog task..."
+$wdTask = "PSBridgeWatchdog"
+$existing = Get-ScheduledTask -TaskName $wdTask -ErrorAction SilentlyContinue
+if (-not $existing) {
+    $wdAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$bridgeDir\watchdog.ps1`""
+    $wdTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration (New-TimeSpan -Days 365)
+    $wdPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    $wdSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+    Register-ScheduledTask -TaskName $wdTask -Action $wdAction -Trigger $wdTrigger -Principal $wdPrincipal -Settings $wdSettings -Description "Monitors PS Bridge and restarts if down" | Out-Null
+    Start-ScheduledTask -TaskName $wdTask
+    Log "  Watchdog task registered and started"
+} else {
+    Log "  Watchdog task already exists"
+}
+
+# ────────────────────────────────────────────────
+# 5. Update PSBridgeServer task for unlimited restarts
+# ────────────────────────────────────────────────
+Log "Updating PSBridgeServer task settings..."
+$bridgeTask = Get-ScheduledTask -TaskName "PSBridgeServer" -ErrorAction SilentlyContinue
+if ($bridgeTask) {
+    # Update restart policy to unlimited
+    $bridgeTask.Settings.RestartCount = 999
+    $bridgeTask.Settings.RestartInterval = "PT1M"
+    $bridgeTask.Settings.ExecutionTimeLimit = "P365D"
+    Set-ScheduledTask -InputObject $bridgeTask | Out-Null
+    Log "  PSBridgeServer updated: 999 restarts, 1-min interval"
+}
+
+# ────────────────────────────────────────────────
+# 6. Bridge will be started by windows-startup-script-cmd
+#    which runs after this PS script and calls start-bridge.bat
+# ────────────────────────────────────────────────
+Log "Files updated. Bridge will be started by CMD startup script next."
+Log "=== Deploy Complete ==="
